@@ -47,7 +47,8 @@ class GoogleMap extends StatefulWidget {
     Key? key,
     required this.initialCameraPosition,
     this.onMapCreated,
-    this.gestureRecognizers = const <Factory<OneSequenceGestureRecognizer>>{},
+    this.onMapReady,
+    this.gestureRecognizers = = const <Factory<OneSequenceGestureRecognizer>>{},
     this.compassEnabled = true,
     this.mapToolbarEnabled = true,
     this.cameraTargetBounds = CameraTargetBounds.unbounded,
@@ -145,6 +146,8 @@ class GoogleMap extends StatefulWidget {
 
   /// Tile overlays to be placed on the map.
   final Set<TileOverlay> tileOverlays;
+
+  final VoidCallback? onMapReady;
 
   /// Called when the camera starts moving.
   ///

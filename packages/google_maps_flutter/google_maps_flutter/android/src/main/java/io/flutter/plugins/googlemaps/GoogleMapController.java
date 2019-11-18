@@ -68,6 +68,7 @@ final class GoogleMapController
   private boolean trafficEnabled = false;
   private boolean buildingsEnabled = true;
   private boolean disposed = false;
+  private boolean _isMapReady = false;
   private final float density;
   private MethodChannel.Result mapReadyResult;
   private final Context context;
@@ -458,6 +459,10 @@ final class GoogleMapController
 
   @Override
   public void onCameraIdle() {
+    if (_isMapReady == false) {
+      _isMapReady = true;
+      methodChannel.invokeMethod("map#ready", Collections.singletonMap("map", id));
+    }
     methodChannel.invokeMethod("camera#onIdle", Collections.singletonMap("map", id));
   }
 

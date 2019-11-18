@@ -52,6 +52,7 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
   BOOL _trackCameraPosition;
   NSObject<FlutterPluginRegistrar>* _registrar;
   BOOL _cameraDidInitialSetup;
+  BOOL _isMapReady;
   FLTMarkersController* _markersController;
   FLTPolygonsController* _polygonsController;
   FLTPolylinesController* _polylinesController;
@@ -70,6 +71,7 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
     _mapView = [GMSMapView mapWithFrame:frame camera:camera];
     _mapView.accessibilityElementsHidden = NO;
     _trackCameraPosition = NO;
+    _isMapReady = NO;
     InterpretMapOptions(args[@"options"], self);
     NSString* channelName =
         [NSString stringWithFormat:@"plugins.flutter.io/google_maps_%lld", viewId];
@@ -496,6 +498,11 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
 }
 
 - (void)mapView:(GMSMapView*)mapView idleAtCameraPosition:(GMSCameraPosition*)position {
+    if (_isMapReady == NO) {
+        NSLog(@"Google Map is Ready");
+        _isMapReady = YES;
+        [_channel invokeMethod:@"map#ready" arguments:@{}];
+    }
   [_channel invokeMethod:@"camera#onIdle" arguments:@{}];
 }
 

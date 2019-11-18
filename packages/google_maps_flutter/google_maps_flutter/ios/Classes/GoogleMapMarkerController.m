@@ -268,7 +268,14 @@ static UIImage* ExtractIcon(NSObject<FlutterPluginRegistrar>* registrar, NSArray
     if (!controller) {
       continue;
     }
+
+    [CATransaction begin];
+    // have animation
+    // [CATransaction setDisableActions:YES];
+    // no animation at below code
+    [CATransaction setAnimationDuration:0.0];
     InterpretMarkerOptions(marker, controller, _registrar);
+    [CATransaction commit];
   }
 }
 - (void)removeMarkerIds:(NSArray*)markerIdsToRemove {

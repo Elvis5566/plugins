@@ -93,12 +93,6 @@ class GoogleMapController {
         _googleMapState
             .onLongPress(LatLng._fromJson(call.arguments['position']));
         break;
-//      case 'map#ready':
-//        if (_googleMapState.widget.onMapReady != null && !_isMapReadyCalled) {
-//          _isMapReadyCalled = true;
-//          _googleMapState.widget.onMapReady();
-//        }
-        break;
       default:
         throw MissingPluginException();
     }

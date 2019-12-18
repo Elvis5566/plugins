@@ -42,6 +42,8 @@ class GoogleMapController {
 
   final _GoogleMapState _googleMapState;
 
+  bool _isMapReadyCalled = false;
+
   Future<dynamic> _handleMethodCall(MethodCall call) async {
     switch (call.method) {
       case 'camera#onMoveStarted':
@@ -59,6 +61,10 @@ class GoogleMapController {
       case 'camera#onIdle':
         if (_googleMapState.widget.onCameraIdle != null) {
           _googleMapState.widget.onCameraIdle();
+        }
+        if (_googleMapState.widget.onMapReady != null && !_isMapReadyCalled) {
+          _isMapReadyCalled = true;
+          _googleMapState.widget.onMapReady();
         }
         break;
       case 'marker#onTap':
@@ -87,10 +93,11 @@ class GoogleMapController {
         _googleMapState
             .onLongPress(LatLng._fromJson(call.arguments['position']));
         break;
-      case 'map#ready':
-        if (_googleMapState.widget.onMapReady != null) {
-          _googleMapState.widget.onMapReady();
-        }
+//      case 'map#ready':
+//        if (_googleMapState.widget.onMapReady != null && !_isMapReadyCalled) {
+//          _isMapReadyCalled = true;
+//          _googleMapState.widget.onMapReady();
+//        }
         break;
       default:
         throw MissingPluginException();

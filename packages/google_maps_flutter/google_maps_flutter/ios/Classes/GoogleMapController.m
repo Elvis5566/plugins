@@ -38,10 +38,28 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
 - (NSObject<FlutterPlatformView>*)createWithFrame:(CGRect)frame
                                    viewIdentifier:(int64_t)viewId
                                         arguments:(id _Nullable)args {
-  return [[FLTGoogleMapController alloc] initWithFrame:frame
-                                        viewIdentifier:viewId
-                                             arguments:args
-                                             registrar:_registrar];
+    /*
+    static FLTGoogleMapController *controller = nil;
+    static dispatch_once_t once;
+    
+    if (controller) {
+        [controller setupMapForviewIdentifier:viewId arguments:args registrar:_registrar];
+    }
+    
+    dispatch_once(&once, ^{
+        controller = [[FLTGoogleMapController alloc] initWithFrame:frame
+                                                    viewIdentifier:viewId
+                                                    arguments:args
+                                                    registrar:_registrar];
+    });
+    
+    return controller;
+     /*/
+    return [[FLTGoogleMapController alloc] initWithFrame:frame
+                                          viewIdentifier:viewId
+                                               arguments:args
+                                               registrar:_registrar];
+    //*/
 }
 @end
 
@@ -125,6 +143,56 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
   return self;
 }
 
+- (void) setupMapForviewIdentifier: (int64_t) viewId
+                         arguments:(id _Nullable)args
+                         registrar:(NSObject<FlutterPluginRegistrar>*)registrar {
+    _mapView.accessibilityElementsHidden = NO;
+    _trackCameraPosition = NO;
+    InterpretMapOptions(args[@"options"], self);
+    NSString* channelName =
+        [NSString stringWithFormat:@"plugins.flutter.io/google_maps_%lld", viewId];
+    _channel = [FlutterMethodChannel methodChannelWithName:channelName
+                                           binaryMessenger:registrar.messenger];
+    __weak __typeof__(self) weakSelf = self;
+    [_channel setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
+      if (weakSelf) {
+        [weakSelf onMethodCall:call result:result];
+      }
+    }];
+    _mapView.delegate = weakSelf;
+    _registrar = registrar;
+    _cameraDidInitialSetup = NO;
+    _markersController = [[FLTMarkersController alloc] init:_channel
+                                                    mapView:_mapView
+                                                  registrar:registrar];
+    _polygonsController = [[FLTPolygonsController alloc] init:_channel
+                                                      mapView:_mapView
+                                                    registrar:registrar];
+    _polylinesController = [[FLTPolylinesController alloc] init:_channel
+                                                        mapView:_mapView
+                                                      registrar:registrar];
+    _circlesController = [[FLTCirclesController alloc] init:_channel
+                                                    mapView:_mapView
+                                                  registrar:registrar];
+    [_mapView clear];
+    id markersToAdd = args[@"markersToAdd"];
+    if ([markersToAdd isKindOfClass:[NSArray class]]) {
+      [_markersController addMarkers:markersToAdd];
+    }
+    id polygonsToAdd = args[@"polygonsToAdd"];
+    if ([polygonsToAdd isKindOfClass:[NSArray class]]) {
+      [_polygonsController addPolygons:polygonsToAdd];
+    }
+    id polylinesToAdd = args[@"polylinesToAdd"];
+    if ([polylinesToAdd isKindOfClass:[NSArray class]]) {
+      [_polylinesController addPolylines:polylinesToAdd];
+    }
+    id circlesToAdd = args[@"circlesToAdd"];
+    if ([circlesToAdd isKindOfClass:[NSArray class]]) {
+      [_circlesController addCircles:circlesToAdd];
+    }
+}
+
 - (UIView*)view {
   [_mapView addObserver:self forKeyPath:@"frame" options:0 context:nil];
   return _mapView;
@@ -154,7 +222,6 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
   } else {
     [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
   }
-}
 
 - (void)onMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   if ([call.method isEqualToString:@"map#show"]) {

@@ -43,6 +43,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)animateWithCameraUpdate:(GMSCameraUpdate *)cameraUpdate;
 - (void)moveWithCameraUpdate:(GMSCameraUpdate *)cameraUpdate;
 - (nullable GMSCameraPosition *)cameraPosition;
+- (void)setupMapForviewIdentifier:(int64_t)viewId
+                        arguments:(id _Nullable)args
+                        registrar:(NSObject<FlutterPluginRegistrar>*)registrar;
 @end
 
 // Allows the engine to create new Google Map instances.

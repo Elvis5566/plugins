@@ -222,6 +222,7 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
   } else {
     [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
   }
+}
 
 - (void)onMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   if ([call.method isEqualToString:@"map#show"]) {

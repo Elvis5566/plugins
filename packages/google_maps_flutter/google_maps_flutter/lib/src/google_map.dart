@@ -148,7 +148,7 @@ class GoogleMap extends StatefulWidget {
   final Set<TileOverlay> tileOverlays;
 
   final VoidCallback? onMapReady;
-
+  
   /// Called when the camera starts moving.
   ///
   /// This can be initiated by the following:

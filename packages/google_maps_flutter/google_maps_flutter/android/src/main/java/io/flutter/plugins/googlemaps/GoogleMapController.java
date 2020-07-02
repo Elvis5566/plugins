@@ -119,8 +119,8 @@ final class GoogleMapController
     googleMap.moveCamera(cameraUpdate);
   }
 
-  private void animateCamera(CameraUpdate cameraUpdate) {
-    googleMap.animateCamera(cameraUpdate);
+  private void animateCamera(CameraUpdate cameraUpdate, int animationSpeed) {
+    googleMap.animateCamera(cameraUpdate, animationSpeed, null);
   }
 
   private CameraPosition getCameraPosition() {
@@ -241,7 +241,8 @@ final class GoogleMapController
         {
           final CameraUpdate cameraUpdate =
               Convert.toCameraUpdate(call.argument("cameraUpdate"), density);
-          animateCamera(cameraUpdate);
+          final int animationSpeed = (int) call.argument("animationSpeed");
+          animateCamera(cameraUpdate, animationSpeed);
           result.success(null);
           break;
         }

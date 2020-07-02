@@ -38,28 +38,10 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
 - (NSObject<FlutterPlatformView>*)createWithFrame:(CGRect)frame
                                    viewIdentifier:(int64_t)viewId
                                         arguments:(id _Nullable)args {
-    /*
-    static FLTGoogleMapController *controller = nil;
-    static dispatch_once_t once;
-    
-    if (controller) {
-        [controller setupMapForviewIdentifier:viewId arguments:args registrar:_registrar];
-    }
-    
-    dispatch_once(&once, ^{
-        controller = [[FLTGoogleMapController alloc] initWithFrame:frame
-                                                    viewIdentifier:viewId
-                                                    arguments:args
-                                                    registrar:_registrar];
-    });
-    
-    return controller;
-     /*/
     return [[FLTGoogleMapController alloc] initWithFrame:frame
                                           viewIdentifier:viewId
                                                arguments:args
                                                registrar:_registrar];
-    //*/
 }
 @end
 
@@ -230,7 +212,7 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
     [self hide];
     result(nil);
   } else if ([call.method isEqualToString:@"camera#animate"]) {
-    [self animateWithCameraUpdate:ToCameraUpdate(call.arguments[@"cameraUpdate"])];
+    [self animateWithCameraUpdate:ToCameraUpdate(call.arguments[@"cameraUpdate"]) animationSpeed: ToDouble(call.arguments[@"animationSpeed"])];
     result(nil);
   } else if ([call.method isEqualToString:@"camera#move"]) {
     [self moveWithCameraUpdate:ToCameraUpdate(call.arguments[@"cameraUpdate"])];
@@ -454,8 +436,12 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
   _mapView.hidden = YES;
 }
 
-- (void)animateWithCameraUpdate:(GMSCameraUpdate*)cameraUpdate {
+- (void)animateWithCameraUpdate:(GMSCameraUpdate*)cameraUpdate animationSpeed: (double)animationSpeed {
+  [CATransaction begin];
+  [CATransaction setAnimationTimingFunction: [CAMediaTimingFunction functionWithName: kCAMediaTimingFunctionEaseInEaseOut]];
+  [CATransaction setValue: [NSNumber numberWithFloat: animationSpeed / 1000] forKey: kCATransactionAnimationDuration];
   [_mapView animateWithCameraUpdate:cameraUpdate];
+  [CATransaction commit];
 }
 
 - (void)moveWithCameraUpdate:(GMSCameraUpdate*)cameraUpdate {

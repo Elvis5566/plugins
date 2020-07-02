@@ -334,9 +334,11 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
   Future<void> animateCamera(
     CameraUpdate cameraUpdate, {
     required int mapId,
+    int animationSpeed,
   }) {
     return channel(mapId).invokeMethod<void>('camera#animate', <String, Object>{
       'cameraUpdate': cameraUpdate.toJson(),
+      'animationSpeed': animationSpeed,
     });
   }
 

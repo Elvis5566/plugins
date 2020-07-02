@@ -70,7 +70,7 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     if (channel == null) {
       channel = MethodChannel('plugins.flutter.io/google_maps_$mapId');
       channel.setMethodCallHandler(
-          (MethodCall call) => _handleMethodCall(call, mapId));
+              (MethodCall call) => _handleMethodCall(call, mapId));
       _channels[mapId] = channel;
     }
     return channel;
@@ -93,7 +93,7 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
   // It is a `broadcast` because multiple controllers will connect to
   // different stream views of this Controller.
   final StreamController<MapEvent> _mapEventStreamController =
-      StreamController<MapEvent>.broadcast();
+  StreamController<MapEvent>.broadcast();
 
   // Returns a filtered view of the events in the _controller, by mapId.
   Stream<MapEvent> _events(int mapId) =>
@@ -154,6 +154,11 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     return _events(mapId).whereType<MapLongPressEvent>();
   }
 
+  @override
+  Stream<AnimateCameraCompletedEvent> animateCameraCompleted({required int mapId}) {
+    return _events(mapId).whereType<AnimateCameraCompletedEvent>();
+  }
+
   Future<dynamic> _handleMethodCall(MethodCall call, int mapId) async {
     switch (call.method) {
       case 'camera#onMoveStarted':
@@ -167,6 +172,9 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
         break;
       case 'camera#onIdle':
         _mapEventStreamController.add(CameraIdleEvent(mapId));
+        break;
+      case 'camera#animationCompleted':
+        _mapEventStreamController.add(AnimateCameraCompletedEvent(mapId));
         break;
       case 'marker#onTap':
         _mapEventStreamController.add(MarkerTapEvent(
@@ -334,7 +342,7 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
   Future<void> animateCamera(
     CameraUpdate cameraUpdate, {
     required int mapId,
-    int animationSpeed,
+    int animationSpeed = 2000,
   }) {
     return channel(mapId).invokeMethod<void>('camera#animate', <String, Object>{
       'cameraUpdate': cameraUpdate.toJson(),

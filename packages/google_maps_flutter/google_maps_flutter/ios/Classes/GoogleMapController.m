@@ -439,6 +439,9 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
 - (void)animateWithCameraUpdate:(GMSCameraUpdate*)cameraUpdate animationSpeed: (double)animationSpeed {
   [CATransaction begin];
   [CATransaction setAnimationTimingFunction: [CAMediaTimingFunction functionWithName: kCAMediaTimingFunctionEaseInEaseOut]];
+  [CATransaction setCompletionBlock: ^ {
+    [_channel invokeMethod:@"camera#animationCompleted" arguments:@{}];
+  }];
   [CATransaction setValue: [NSNumber numberWithFloat: animationSpeed / 1000] forKey: kCATransactionAnimationDuration];
   [_mapView animateWithCameraUpdate:cameraUpdate];
   [CATransaction commit];

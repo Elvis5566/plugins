@@ -4,6 +4,8 @@
 
 part of google_maps_flutter;
 
+typedef OnAnimationCompletedCallback = Future<void> Function();
+
 /// Controller for a single GoogleMap instance running on the host platform.
 class GoogleMapController {
   /// The mapId for this controller
@@ -21,11 +23,9 @@ class GoogleMapController {
   ///
   /// Mainly for internal use when instantiating a [GoogleMapController] passed
   /// in [GoogleMap.onMapCreated] callback.
-  static Future<GoogleMapController> init(
-    int id,
-    CameraPosition initialCameraPosition,
-    _GoogleMapState googleMapState,
-  ) async {
+  static Future<GoogleMapController> init(int id,
+      CameraPosition initialCameraPosition,
+      _GoogleMapState googleMapState,) async {
     assert(id != null);
     await GoogleMapsFlutterPlatform.instance.init(id);
     return GoogleMapController._(
@@ -180,8 +180,12 @@ class GoogleMapController {
   ///
   /// The returned [Future] completes after the change has been started on the
   /// platform side.
-  Future<void> animateCamera(CameraUpdate cameraUpdate, {int animationSpeed = 2000}) {
-    return GoogleMapsFlutterPlatform.animateCamera(cameraUpdate, mapId: mapId, animationSpeed: animationSpeed);
+  Future<void> animateCamera(CameraUpdate cameraUpdate, {int animationSpeed = 2000, OnAnimationCompletedCallback? onAnimationCompletedCallback}) {
+    GoogleMapsFlutterPlatform.instance.animateCameraCompleted(mapId: mapId).listen((event) {
+      print('animate camera completed');
+      onAnimationCompletedCallback?.call();
+    });
+    return _googleMapsFlutterPlatform.animateCamera(cameraUpdate, mapId: mapId, animationSpeed: animationSpeed);
   }
 
   /// Changes the map camera position.

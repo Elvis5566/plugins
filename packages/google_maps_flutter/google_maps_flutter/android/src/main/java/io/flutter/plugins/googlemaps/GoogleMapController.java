@@ -120,7 +120,17 @@ final class GoogleMapController
   }
 
   private void animateCamera(CameraUpdate cameraUpdate, int animationSpeed) {
-    googleMap.animateCamera(cameraUpdate, animationSpeed, null);
+    googleMap.animateCamera(cameraUpdate, animationSpeed, new CancelableCallback() {
+        @Override
+        public void onFinish() {
+            methodChannel.invokeMethod("camera#animationCompleted", Collections.singletonMap("map", id));
+        }
+
+        @Override
+        public void onCancel() {
+            methodChannel.invokeMethod("camera#animationCompleted", Collections.singletonMap("map", id));
+        }
+    });
   }
 
   private CameraPosition getCameraPosition() {

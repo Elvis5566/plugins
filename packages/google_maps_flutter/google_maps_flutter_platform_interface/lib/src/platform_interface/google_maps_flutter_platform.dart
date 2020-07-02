@@ -5,14 +5,13 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/widgets.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-
-import 'package:google_maps_flutter_platform_interface/src/method_channel/method_channel_google_maps_flutter.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:google_maps_flutter_platform_interface/src/method_channel/method_channel_google_maps_flutter.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 /// The interface that platform-specific implementations of `google_maps_flutter` must extend.
@@ -337,6 +336,11 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
   /// Dispose of whatever resources the `mapId` is holding on to.
   void dispose({required int mapId}) {
     throw UnimplementedError('dispose() has not been implemented.');
+  }
+
+  /// when animate camera is completed
+  Stream<AnimateCameraCompletedEvent> animateCameraCompleted({@required int mapId}) {
+    throw UnimplementedError('animateCameraCompleted() has not been implemented.');
   }
 
   /// Returns a widget displaying the map view

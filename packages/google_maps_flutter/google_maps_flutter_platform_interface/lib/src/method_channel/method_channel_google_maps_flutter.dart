@@ -544,6 +544,20 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     );
   }
 
+  /// set padding to map
+  Future<void> setPadding({double top = 0, double left = 0, double bottom = 0, double right = 0, required int mapId}) {
+    return channel(mapId).invokeMethod<void>('map#setPadding', <String, double>{
+      'top': top,
+      'left': left,
+      'bottom': bottom,
+      'right': right,
+    });
+  }
+
+  /// This method builds the appropriate platform view where the map
+  /// can be rendered.
+  /// The `mapId` is passed as a parameter from the framework on the
+  /// `onPlatformViewCreated` callback.
   @override
   Widget buildView(
     int creationId,

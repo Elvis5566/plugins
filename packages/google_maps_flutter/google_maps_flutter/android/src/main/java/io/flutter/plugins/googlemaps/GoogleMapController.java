@@ -428,6 +428,16 @@ final class GoogleMapController
           result.success(tileOverlaysController.getTileOverlayInfo(tileOverlayId));
           break;
         }
+      case "map#setPadding":
+        {
+          double top = (double)  call.argument("top");
+          double left = (double) call.argument("left");
+          double bottom = (double) call.argument("bottom");
+          double right = (double) call.argument("right");
+          setPadding((float) top, (float) left, (float) bottom, (float) right);
+          result.success(null);
+          break;
+        }
       default:
         result.notImplemented();
     }

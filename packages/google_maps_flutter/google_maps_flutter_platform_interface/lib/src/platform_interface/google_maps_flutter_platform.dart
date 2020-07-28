@@ -275,6 +275,11 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
     throw UnimplementedError('takeSnapshot() has not been implemented.');
   }
 
+  /// set padding to map
+  Future<void> setPadding({double top = 0, double left = 0, double bottom = 0, double right = 0, required int mapId}) {
+    throw UnimplementedError('setPadding has not been implemented.');
+  }
+
   // The following are the 11 possible streams of data from the native side
   // into the plugin
 

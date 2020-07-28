@@ -421,6 +421,13 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
   } else if ([call.method isEqualToString:@"map#getTileOverlayInfo"]) {
     NSString* rawTileOverlayId = call.arguments[@"tileOverlayId"];
     result([_tileOverlaysController getTileOverlayInfo:rawTileOverlayId]);
+  } else if ([call.method isEqualToString:@"map#setPadding"]) {
+    double top = ToDouble(call.arguments[@"top"]);
+    double left = ToDouble(call.arguments[@"left"]);
+    double bottom = ToDouble(call.arguments[@"bottom"]);
+    double right = ToDouble(call.arguments[@"right"]);
+    [self setPaddingTop:top left:left bottom:bottom right:right];
+    result(nil);
   } else {
     result(FlutterMethodNotImplemented);
   }

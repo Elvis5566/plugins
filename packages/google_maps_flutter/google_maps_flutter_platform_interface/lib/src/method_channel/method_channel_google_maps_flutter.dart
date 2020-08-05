@@ -159,8 +159,16 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     return _events(mapId).whereType<AnimateCameraCompletedEvent>();
   }
 
+  @override
+  Stream<MapReadyEvent> onMapReady({@required int mapId}) {
+    return _events(mapId).whereType<MapReadyEvent>();
+  }
+
   Future<dynamic> _handleMethodCall(MethodCall call, int mapId) async {
     switch (call.method) {
+      case 'map#ready':
+        _mapEventStreamController.add(MapReadyEvent(mapId));
+        break;
       case 'camera#onMoveStarted':
         _mapEventStreamController.add(CameraMoveStartedEvent(mapId));
         break;

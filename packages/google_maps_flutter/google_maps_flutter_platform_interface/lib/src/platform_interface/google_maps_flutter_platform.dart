@@ -348,6 +348,11 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
     throw UnimplementedError('animateCameraCompleted() has not been implemented.');
   }
 
+  /// when map is ready
+  Stream<MapReadyEvent> onMapReady({@required int mapId}) {
+    throw UnimplementedError('onMapReady() has not been implemented.');
+  }
+
   /// Returns a widget displaying the map view
   Widget buildView(
     int creationId,

@@ -168,6 +168,7 @@ final class GoogleMapController
       case "map#waitForMap":
         if (googleMap != null) {
           result.success(null);
+          methodChannel.invokeMethod("map#ready", Collections.singletonMap("map", id));
           return;
         }
         mapReadyResult = result;

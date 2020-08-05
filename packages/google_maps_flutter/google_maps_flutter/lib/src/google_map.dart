@@ -86,6 +86,8 @@ class GoogleMap extends StatefulWidget {
   /// Used to receive a [GoogleMapController] for this [GoogleMap].
   final MapCreatedCallback? onMapCreated;
 
+  final VoidCallback onMapReady;
+
   /// The initial position of the map's camera.
   final CameraPosition initialCameraPosition;
 
@@ -148,7 +150,7 @@ class GoogleMap extends StatefulWidget {
   final Set<TileOverlay> tileOverlays;
 
   final VoidCallback? onMapReady;
-  
+
   /// Called when the camera starts moving.
   ///
   /// This can be initiated by the following:

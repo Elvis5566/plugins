@@ -92,6 +92,11 @@ class AnimateCameraCompletedEvent extends MapEvent<void> {
   AnimateCameraCompletedEvent(int mapId) : super(mapId, null);
 }
 
+/// An event fired when the map is ready
+class MapReadyEvent extends MapEvent<void> {
+  MapReadyEvent(int mapId) : super(mapId, null);
+}
+
 /// An event fired when a [Marker] is tapped.
 class MarkerTapEvent extends MapEvent<MarkerId> {
   /// Build a MarkerTap Event triggered from the map represented by `mapId`.

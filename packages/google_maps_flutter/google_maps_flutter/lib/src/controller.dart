@@ -58,6 +58,7 @@ class GoogleMapController {
         .onMapReady(mapId: mapId)
         .listen((_) {
       _googleMapState.widget.onMapReady?.call();
+      _googleMapsFlutterPlatform.onMapReady(mapId: mapId).listen((_) => null);
     });
     if (_googleMapState.widget.onCameraMoveStarted != null) {
       GoogleMapsFlutterPlatform.instance
@@ -302,14 +303,5 @@ class GoogleMapController {
   /// Disposes of the platform resources
   void dispose() {
     GoogleMapsFlutterPlatform.instance.dispose(mapId: mapId);
-  }
-
-  /// set google map padding.
-  Future<void> setPadding({double top = 0, double left = 0, double bottom = 0, double right = 0}) {
-    return _googleMapsFlutterPlatform.setPadding(mapId: mapId,
-        top: top,
-        left: left,
-        bottom: bottom,
-        right: right);
   }
 }

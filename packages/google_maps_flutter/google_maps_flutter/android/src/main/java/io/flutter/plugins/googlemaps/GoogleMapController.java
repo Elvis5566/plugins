@@ -244,6 +244,16 @@ final class GoogleMapController
         {
           final CameraUpdate cameraUpdate =
               Convert.toCameraUpdate(call.argument("cameraUpdate"), density);
+          final List<?> data = Convert.toList(call.argument("cameraUpdate"));
+          if (Convert.toString(data.get(0)).equals("newLatLngBoundsWithEdgeInsets")) {
+            final List<?> padding = Convert.toList(data.get(2));
+            setPadding(
+                    Convert.toFloat(padding.get(0)),
+                    Convert.toFloat(padding.get(1)),
+                    Convert.toFloat(padding.get(2)),
+                    Convert.toFloat(padding.get(3))
+            );
+          }
           moveCamera(cameraUpdate);
           result.success(null);
           break;
@@ -253,6 +263,16 @@ final class GoogleMapController
           final CameraUpdate cameraUpdate =
               Convert.toCameraUpdate(call.argument("cameraUpdate"), density);
           final int animationSpeed = (int) call.argument("animationSpeed");
+          final List<?> data = Convert.toList(call.argument("cameraUpdate"));
+          if (Convert.toString(data.get(0)).equals("newLatLngBoundsWithEdgeInsets")) {
+            final List<?> padding = Convert.toList(data.get(2));
+            setPadding(
+                    Convert.toFloat(padding.get(0)),
+                    Convert.toFloat(padding.get(1)),
+                    Convert.toFloat(padding.get(2)),
+                    Convert.toFloat(padding.get(3))
+            );
+          }
           animateCamera(cameraUpdate, animationSpeed);
           result.success(null);
           break;

@@ -126,6 +126,9 @@ class Convert {
         return CameraUpdateFactory.zoomOut();
       case "zoomTo":
         return CameraUpdateFactory.zoomTo(toFloat(data.get(1)));
+      case "newLatLngBoundsWithEdgeInsets":
+        return CameraUpdateFactory.newLatLngBounds(
+                toLatLngBounds(data.get(1)), 0);
       default:
         throw new IllegalArgumentException("Cannot interpret " + o + " as CameraUpdate");
     }
@@ -135,7 +138,7 @@ class Convert {
     return ((Number) o).doubleValue();
   }
 
-  private static float toFloat(Object o) {
+  static float toFloat(Object o) {
     return ((Number) o).floatValue();
   }
 
@@ -246,7 +249,7 @@ class Convert {
     return new LatLngBounds(toLatLng(data.get(0)), toLatLng(data.get(1)));
   }
 
-  private static List<?> toList(Object o) {
+  static List<?> toList(Object o) {
     return (List<?>) o;
   }
 
@@ -270,7 +273,7 @@ class Convert {
     return toFloat(o) * density;
   }
 
-  private static int toPixels(Object o, float density) {
+  static int toPixels(Object o, float density) {
     return (int) toFractionalPixels(o, density);
   }
 
@@ -289,7 +292,7 @@ class Convert {
     return new Point(toPixels(data.get(0), density), toPixels(data.get(1), density));
   }
 
-  private static String toString(Object o) {
+  static String toString(Object o) {
     return (String) o;
   }
 

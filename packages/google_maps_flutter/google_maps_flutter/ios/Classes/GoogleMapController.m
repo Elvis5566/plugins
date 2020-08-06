@@ -701,6 +701,8 @@ static GMSCameraUpdate* ToCameraUpdate(NSArray* data) {
     return [GMSCameraUpdate zoomOut];
   } else if ([update isEqualToString:@"zoomTo"]) {
     return [GMSCameraUpdate zoomTo:ToFloat(data[1])];
+  } else if ([update isEqualToString:@"newLatLngBoundsWithEdgeInsets"]) {
+    return [GMSCameraUpdate fitBounds:ToBounds(data[1]) withEdgeInsets:UIEdgeInsetsMake(ToDouble(data[2][0]), ToDouble(data[2][1]), ToDouble(data[2][2]), ToDouble(data[2][3]))];
   }
   return nil;
 }

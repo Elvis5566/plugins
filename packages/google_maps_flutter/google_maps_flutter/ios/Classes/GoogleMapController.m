@@ -19,6 +19,8 @@ static NSDictionary* GMSCoordinateBoundsToJson(GMSCoordinateBounds* bounds);
 static void InterpretMapOptions(NSDictionary* data, id<FLTGoogleMapOptionsSink> sink);
 static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toDouble:data]; }
 
+static dispatch_block_t delayNotifingAnimationCompletedTask;
+
 @implementation FLTGoogleMapFactory {
   NSObject<FlutterPluginRegistrar>* _registrar;
 }
@@ -444,13 +446,27 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
   _mapView.hidden = YES;
 }
 
+- (void)delayNotifingAnimationCompleted {
+    if (delayNotifingAnimationCompletedTask) {
+        dispatch_block_cancel(delayNotifingAnimationCompletedTask);
+    }
+
+    delayNotifingAnimationCompletedTask = dispatch_block_create(0, ^{
+        [_channel invokeMethod:@"camera#animationCompleted" arguments:@{}];
+        delayNotifingAnimationCompletedTask = nil;
+    });
+
+    dispatch_time_t time = dispatch_time(DISPATCH_TIME_NOW, 0.2 * NSEC_PER_SEC);
+    dispatch_after(time, dispatch_get_main_queue(), delayNotifingAnimationCompletedTask);
+}
+
 - (void)animateWithCameraUpdate:(GMSCameraUpdate*)cameraUpdate animationSpeed: (double)animationSpeed {
   [CATransaction begin];
   [CATransaction setAnimationTimingFunction: [CAMediaTimingFunction functionWithName: kCAMediaTimingFunctionEaseInEaseOut]];
   [CATransaction setCompletionBlock: ^ {
-    [_channel invokeMethod:@"camera#animationCompleted" arguments:@{}];
+      [self delayNotifingAnimationCompleted];
   }];
-  [CATransaction setValue: [NSNumber numberWithFloat: animationSpeed / 1000] forKey: kCATransactionAnimationDuration];
+  [CATransaction setAnimationDuration: (animationSpeed) / 1000];
   [_mapView animateWithCameraUpdate:cameraUpdate];
   [CATransaction commit];
 }
@@ -556,6 +572,9 @@ static double ToDouble(NSNumber* data) { return [FLTGoogleMapJsonConversions toD
 
 - (void)mapView:(GMSMapView*)mapView didChangeCameraPosition:(GMSCameraPosition*)position {
   if (_trackCameraPosition) {
+    if (delayNotifingAnimationCompletedTask) {
+      [self delayNotifingAnimationCompleted];
+    }
     [_channel invokeMethod:@"camera#onMove" arguments:@{@"position" : PositionToJson(position)}];
   }
 }

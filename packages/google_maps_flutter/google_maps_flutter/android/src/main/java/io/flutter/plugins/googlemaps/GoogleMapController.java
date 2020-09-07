@@ -60,6 +60,7 @@ final class GoogleMapController
   private final GoogleMapOptions options;
   @Nullable private MapView mapView;
   private GoogleMap googleMap;
+  private boolean isGoogleMapReady = false;
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private boolean myLocationButtonEnabled = false;
@@ -160,6 +161,17 @@ final class GoogleMapController
     updateInitialPolylines();
     updateInitialCircles();
     updateInitialTileOverlays();
+
+    googleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+      @Override
+      public void onMapLoaded() {
+        if (!isGoogleMapReady) {
+          isGoogleMapReady = true;
+          Log.d("google map controller", "on Map ready: " + String.valueOf(id));
+          methodChannel.invokeMethod("map#ready", Collections.singletonMap("map", id));
+        }
+      }
+    });
   }
 
   @Override
@@ -167,13 +179,17 @@ final class GoogleMapController
     switch (call.method) {
       case "map#waitForMap":
         if (googleMap != null) {
-          result.success(null);
           googleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
-            public void  onMapLoaded() {
-              methodChannel.invokeMethod("map#ready", Collections.singletonMap("map", id));
+            public void onMapLoaded() {
+              if (!isGoogleMapReady) {
+                isGoogleMapReady = true;
+                Log.d("google map controller", "on Map ready: " + String.valueOf(id));
+                methodChannel.invokeMethod("map#ready", Collections.singletonMap("map", id));
+              }
             }
           });
+          result.success(null);
           return;
         }
         mapReadyResult = result;

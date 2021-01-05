@@ -595,7 +595,7 @@ class Convert {
     }
   }
 
-  private static List<LatLng> toPoints(Object o) {
+  static List<LatLng> toPoints(Object o) {
     final List<?> data = toList(o);
     final List<LatLng> points = new ArrayList<>(data.size());
 

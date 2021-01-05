@@ -23,6 +23,9 @@
                           polylineId:(NSString*)polylineId
                              mapView:(GMSMapView*)mapView;
 - (void)removePolyline;
+
+- (void)setPath:(GMSPath *)path;
+- (GMSPath *)path;
 @end
 
 @interface FLTPolylinesController : NSObject
@@ -34,4 +37,5 @@
 - (void)removePolylineIds:(NSArray*)polylineIdsToRemove;
 - (void)onPolylineTap:(NSString*)polylineId;
 - (bool)hasPolylineWithId:(NSString*)polylineId;
+- (FLTGoogleMapPolylineController *)getGoogleMapPolylineController:(NSString *)polylineId;
 @end

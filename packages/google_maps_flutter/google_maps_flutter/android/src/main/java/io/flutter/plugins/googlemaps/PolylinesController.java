@@ -77,6 +77,10 @@ class PolylinesController {
     return false;
   }
 
+  PolylineController getPolylineController(String polylineId) {
+    return polylineIdToController.get(polylineId);
+  }
+
   private void addPolyline(Object polyline) {
     if (polyline == null) {
       return;

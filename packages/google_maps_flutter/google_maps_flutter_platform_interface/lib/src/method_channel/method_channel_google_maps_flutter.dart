@@ -608,4 +608,15 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     return Text(
         '$defaultTargetPlatform is not yet supported by the maps plugin');
   }
+
+  Future<void> initPolyline(Polyline polyline, {@required int mapId}) {
+    return channel(mapId).invokeMethod<Uint8List>('map#initPolyline', polyline.toJson());
+  }
+
+  Future<void> appendPolylinePoints(PolylineId polylineId, List<dynamic> points, {@required int mapId}) {
+    return channel(mapId).invokeMethod<Uint8List>('map#appendPolylinePoints', {
+      'polylineId': polylineId.value,
+      "points": points,
+    });
+  }
 }

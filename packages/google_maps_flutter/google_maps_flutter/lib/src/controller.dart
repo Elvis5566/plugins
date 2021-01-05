@@ -304,4 +304,12 @@ class GoogleMapController {
   void dispose() {
     GoogleMapsFlutterPlatform.instance.dispose(mapId: mapId);
   }
+
+  Future<void> initPolyline(Polyline polyline) {
+    return _googleMapsFlutterPlatform.initPolyline(polyline, mapId: mapId);
+  }
+
+  Future<void> appendPolylinePoints(PolylineId polylineId, List<dynamic> points) {
+    return _googleMapsFlutterPlatform.appendPolylinePoints(polylineId, points, mapId: mapId);
+  }
 }

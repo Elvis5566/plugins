@@ -26,6 +26,14 @@
   _polyline.map = nil;
 }
 
+- (void)setPath:(GMSPath *)path {
+    _polyline.path = path;
+}
+
+- (GMSPath *)path {
+    return _polyline.path;
+}
+
 #pragma mark - FLTGoogleMapPolylineOptionsSink methods
 
 - (void)setConsumeTapEvents:(BOOL)consumes {
@@ -175,6 +183,11 @@ static void InterpretPolylineOptions(NSDictionary* data, id<FLTGoogleMapPolyline
   }
   return _polylineIdToController[polylineId] != nil;
 }
+
+- (FLTGoogleMapPolylineController *)getGoogleMapPolylineController:(NSString *)polylineId {
+    return _polylineIdToController[polylineId];
+}
+
 + (GMSMutablePath*)getPath:(NSDictionary*)polyline {
   NSArray* pointArray = polyline[@"points"];
   NSArray<CLLocation*>* points = ToPoints(pointArray);

@@ -371,4 +371,13 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
   }) {
     throw UnimplementedError('buildView() has not been implemented.');
   }
+
+  Future<void> initPolyline(Polyline polyline, {@required int mapId}) {
+    throw UnimplementedError('initPolyline() has not been implemented.');
+  }
+
+  Future<void> appendPolylinePoints(PolylineId polylineId, List<dynamic> points, {@required int mapId}) {
+    throw UnimplementedError('addTrackingPoints() has not been implemented.');
+  }
+
 }

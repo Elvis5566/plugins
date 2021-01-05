@@ -208,7 +208,28 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
 }
 
 - (void)onMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  if ([call.method isEqualToString:@"map#show"]) {
+  if ([call.method isEqualToString:@"map#initPolyline"]) {
+      id polyline = call.arguments;
+      [_polylinesController addPolylines:@[polyline]];
+
+      result(nil);
+  } else if ([call.method isEqualToString:@"map#appendPolylinePoints"]) {
+      NSString *polylineId = call.arguments[@"polylineId"];
+      FLTGoogleMapPolylineController *controller = [_polylinesController getGoogleMapPolylineController: polylineId];
+
+      GMSMutablePath* path = [[GMSMutablePath alloc] initWithPath: controller.path];
+
+      NSArray<CLLocation*> *points = [FLTGoogleMapJsonConversions toPoints:call.arguments[@"points"]];
+
+      for (CLLocation* location in points) {
+        [path addCoordinate:location.coordinate];
+      }
+
+      [controller setPath:path];
+
+      result(nil);
+
+  } else if ([call.method isEqualToString:@"map#show"]) {
     [self showAtX:ToDouble(call.arguments[@"x"]) Y:ToDouble(call.arguments[@"y"])];
     result(nil);
   } else if ([call.method isEqualToString:@"map#hide"]) {

@@ -13,13 +13,16 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.CancelableCallback;
 import com.google.android.gms.maps.GoogleMap.SnapshotReadyCallback;
 import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.MapView;
@@ -32,18 +35,20 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.GoogleMap.CancelableCallback;
-import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
-import io.flutter.plugin.common.BinaryMessenger;
-import io.flutter.plugin.common.MethodCall;
-import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.platform.PlatformView;
+import com.google.android.gms.maps.model.PolylineOptions;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.platform.PlatformView;
 
 /** Controller of a single GoogleMaps MapView instance. */
 final class GoogleMapController
@@ -174,6 +179,31 @@ final class GoogleMapController
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     switch (call.method) {
+      case "map#initPolyline": {
+        List<Object> polylines = new ArrayList<>();
+        polylines.add(call.arguments);
+        polylinesController.addPolylines(polylines);
+
+        result.success(null);
+        break;
+      }
+
+
+      case "map#appendPolylinePoints": {
+        String polylineId = call.argument("polylineId");
+
+        Polyline polyline = polylinesController.getPolylineController(polylineId).getPolyline();
+        List<LatLng> points = polyline.getPoints();
+
+        points.addAll(Convert.toPoints(call.argument("points")));
+
+        polyline.setPoints(points);
+
+        result.success(null);
+
+        break;
+      }
+
       case "map#waitForMap":
         if (googleMap != null) {
           googleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {

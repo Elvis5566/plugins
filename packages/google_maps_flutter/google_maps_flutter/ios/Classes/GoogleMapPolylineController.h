@@ -23,7 +23,7 @@
                           polylineId:(NSString*)polylineId
                              mapView:(GMSMapView*)mapView;
 - (void)removePolyline;
-
+- (GMSPolyline*) polyline;
 - (void)setPath:(GMSPath *)path;
 - (GMSPath *)path;
 @end

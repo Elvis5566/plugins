@@ -26,6 +26,10 @@
   _polyline.map = nil;
 }
 
+- (GMSPolyline*) polyline {
+    return _polyline;
+}
+
 - (void)setPath:(GMSPath *)path {
     _polyline.path = path;
 }

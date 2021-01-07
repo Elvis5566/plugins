@@ -305,6 +305,14 @@ class GoogleMapController {
     GoogleMapsFlutterPlatform.instance.dispose(mapId: mapId);
   }
 
+  Future<void> updateNavigationIndex(int index, dynamic point) {
+    return _googleMapsFlutterPlatform.updateNavigationIndex(index, point, mapId: mapId);
+  }
+
+  Future<void> initNavigationPolyline(List<dynamic> points, {Polyline skippedPolyline, Polyline remainingPolyline}) {
+    return _googleMapsFlutterPlatform.initNavigationPolyline(points, skippedPolyline: skippedPolyline, remainingPolyline: remainingPolyline, mapId: mapId);
+  }
+
   Future<void> initPolyline(Polyline polyline) {
     return _googleMapsFlutterPlatform.initPolyline(polyline, mapId: mapId);
   }

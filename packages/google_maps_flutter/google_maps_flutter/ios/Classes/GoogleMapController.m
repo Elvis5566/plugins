@@ -59,6 +59,7 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
   FLTPolylinesController* _polylinesController;
   FLTCirclesController* _circlesController;
   FLTTileOverlaysController* _tileOverlaysController;
+  NSArray<CLLocation*> *navigationPoints;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -208,7 +209,68 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
 }
 
 - (void)onMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  if ([call.method isEqualToString:@"map#initPolyline"]) {
+    if ([call.method isEqualToString:@"map#initNavigationPolyline"]) {
+        navigationPoints = [FLTGoogleMapJsonConversions toPoints:call.arguments[@"points"]];
+
+        [_polylinesController addPolylines:@[call.arguments[@"skippedPolyline"], call.arguments[@"remainingPolyline"]]];
+
+        FLTGoogleMapPolylineController *controller = [_polylinesController getGoogleMapPolylineController: @"remainingPolyline"];
+
+        GMSMutablePath* path = [GMSMutablePath path];
+
+        for (CLLocation* location in navigationPoints) {
+          [path addCoordinate:location.coordinate];
+        }
+
+        [controller.polyline setPath:path];
+
+        result(nil);
+    } else if ([call.method isEqualToString:@"map#updateNavigationIndex"]) {
+        int index = [FLTGoogleMapJsonConversions toInt:call.arguments[@"index"]];
+
+        if (index >= 0 && index < navigationPoints.count) {
+            NSArray<CLLocation*> *points = [FLTGoogleMapJsonConversions toPoints:call.arguments[@"points"]];
+
+            id _point = call.arguments[@"point"];
+            CLLocation *point = [_point isEqual:[NSNull null]] ? nil : [FLTGoogleMapJsonConversions toPoints:@[_point]].firstObject;
+
+            GMSPolyline* skippedPolyline = [_polylinesController getGoogleMapPolylineController: @"skippedPolyline"].polyline;
+            GMSPolyline* remainingPolyline = [_polylinesController getGoogleMapPolylineController: @"remainingPolyline"].polyline;
+
+            NSRange skippedRange = NSMakeRange(0, index + 1);
+
+            GMSMutablePath* skippedPath = [GMSMutablePath path];
+            for (CLLocation* location in [navigationPoints subarrayWithRange:skippedRange]) {
+              [skippedPath addCoordinate:location.coordinate];
+            }
+
+            if (point) {
+                [skippedPath addCoordinate:point.coordinate];
+            }
+
+            [skippedPolyline setPath:skippedPath];
+
+            NSRange remainingRange = NSMakeRange(index, navigationPoints.count - index);
+
+            GMSMutablePath* remainingPath = [GMSMutablePath path];
+            for (CLLocation* location in [navigationPoints subarrayWithRange:remainingRange]) {
+              [remainingPath addCoordinate:location.coordinate];
+            }
+
+            if (point) {
+                [remainingPath replaceCoordinateAtIndex:0 withCoordinate:point.coordinate];
+            }
+
+            [remainingPolyline setPath:remainingPath];
+        }
+
+        result(nil);
+    } else if ([call.method isEqualToString:@"map#initPolyline"]) {
+      id polyline = call.arguments;
+      [_polylinesController addPolylines:@[polyline]];
+
+      result(nil);
+  } else if ([call.method isEqualToString:@"map#initPolyline"]) {
       id polyline = call.arguments;
       [_polylinesController addPolylines:@[polyline]];
 

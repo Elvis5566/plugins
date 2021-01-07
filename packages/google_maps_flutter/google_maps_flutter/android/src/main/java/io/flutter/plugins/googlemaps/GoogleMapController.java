@@ -35,7 +35,6 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -89,6 +88,8 @@ final class GoogleMapController
   private List<Object> initialPolylines;
   private List<Object> initialCircles;
   private List<Map<String, ?>> initialTileOverlays;
+
+  private List<LatLng> navigationPoints;
 
   GoogleMapController(
       int id,
@@ -179,6 +180,52 @@ final class GoogleMapController
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     switch (call.method) {
+      case "map#initNavigationPolyline": {
+        navigationPoints = Convert.toPoints(call.argument("points"));
+
+        List<Object> polylines = new ArrayList<>();
+        polylines.add(call.argument("skippedPolyline"));
+        polylines.add(call.argument("remainingPolyline"));
+        polylinesController.addPolylines(polylines);
+
+        Polyline remainingPolyline = polylinesController.getPolylineController("remainingPolyline").getPolyline();
+        remainingPolyline.setPoints(navigationPoints);
+
+        result.success(null);
+        break;
+      }
+
+      case "map#updateNavigationIndex": {
+        int index = call.argument("index");
+
+        if (index >= 0 && index < navigationPoints.size()) {
+          Object _point = call.argument("point");
+          LatLng point = _point != null ? Convert.toLatLng(_point) : null;
+
+          Polyline skippedPolyline = polylinesController.getPolylineController("skippedPolyline").getPolyline();
+          Polyline remainingPolyline = polylinesController.getPolylineController("remainingPolyline").getPolyline();
+
+          List<LatLng> skippedPoints = new ArrayList<>(navigationPoints.subList(0, index + 1));
+          if (point != null) {
+            skippedPoints.add(point);
+          }
+
+          skippedPolyline.setPoints(skippedPoints);
+
+          List<LatLng> remainingPoints = new ArrayList<>(navigationPoints.subList(index, navigationPoints.size()));
+
+          if (point != null) {
+            remainingPoints.remove(0);
+            remainingPoints.add(0, point);
+          }
+
+          remainingPolyline.setPoints(remainingPoints);
+        }
+
+        result.success(null);
+        break;
+      }
+
       case "map#initPolyline": {
         List<Object> polylines = new ArrayList<>();
         polylines.add(call.arguments);
@@ -187,7 +234,6 @@ final class GoogleMapController
         result.success(null);
         break;
       }
-
 
       case "map#appendPolylinePoints": {
         String polylineId = call.argument("polylineId");
@@ -200,7 +246,6 @@ final class GoogleMapController
         polyline.setPoints(points);
 
         result.success(null);
-
         break;
       }
 

@@ -412,7 +412,7 @@ final class GoogleMapController
         long start = System.currentTimeMillis();
         for (Object marker : markersToUpdate) {
           final Map<String, ? super Object> data = (Map<String, ? super Object>) marker;
-          final Map<String, ?> extra = (Map<String, ? super Object>) data.get("extra");
+          final Map<String, Object> extra = (Map<String, Object>) data.get("extra");
 
           if (extra == null || extra.isEmpty()) {
             data.put("icon", null);
@@ -470,7 +470,7 @@ final class GoogleMapController
         long start = System.currentTimeMillis();
         for (Object marker : markersToUpdate) {
           final Map<String, ? super Object> data = (Map<String, ? super Object>) marker;
-          final Map<String, ?> extra = (Map<String, ? super Object>) data.get("extra");
+          final Map<String, Object> extra = (Map<String, Object>) data.get("extra");
 
           if (extra == null || extra.isEmpty()) {
             data.put("icon", null);

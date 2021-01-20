@@ -393,12 +393,14 @@ final class GoogleMapController
       {
         List<Object> markersToAdd = call.argument("markers");
         markersController.addMarkers(markersToAdd);
+        result.success(null);
         break;
       }
       case "map#updateMarker":
       {
         List<Object> markersToChange = call.argument("markers");
         markersController.changeMarkers(markersToChange);
+        result.success(null);
         break;
       }
       case "map#updateRiderMarkers":

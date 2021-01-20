@@ -286,11 +286,6 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
       [_polylinesController addPolylines:@[polyline]];
 
       result(nil);
-  } else if ([call.method isEqualToString:@"map#initPolyline"]) {
-      id polyline = call.arguments;
-      [_polylinesController addPolylines:@[polyline]];
-
-      result(nil);
   } else if ([call.method isEqualToString:@"map#appendPolylinePoints"]) {
       NSString *polylineId = call.arguments[@"polylineId"];
       FLTGoogleMapPolylineController *controller = [_polylinesController getGoogleMapPolylineController: polylineId];

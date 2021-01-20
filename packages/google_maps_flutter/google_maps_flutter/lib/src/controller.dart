@@ -10,6 +10,8 @@ typedef OnAnimationCompletedCallback = Future<void> Function();
 class GoogleMapController {
   /// The mapId for this controller
   final int mapId;
+  final StreamController<MarkerId> _markerOnTapStreamController = StreamController<MarkerId>();
+  Stream<MarkerId> get onMarkerTapStream => _markerOnTapStreamController.stream;
 
   OnAnimationCompletedCallback? _onAnimationCompletedCallback;
 
@@ -74,12 +76,17 @@ class GoogleMapController {
           .onCameraIdle(mapId: mapId)
           .listen((_) => _googleMapState.widget.onCameraIdle!());
     }
+
     GoogleMapsFlutterPlatform.instance
         .onMarkerTap(mapId: mapId)
-        .listen((MarkerTapEvent e) => _googleMapState.onMarkerTap(e.value));
+        .listen((MarkerTapEvent e) => {
+            _googleMapState.onMarkerTap(e.value);
+            _markerOnTapStreamController.add(e.value);
+        });
+
     GoogleMapsFlutterPlatform.instance.onMarkerDragEnd(mapId: mapId).listen(
-        (MarkerDragEndEvent e) =>
-            _googleMapState.onMarkerDragEnd(e.value, e.position));
+        (MarkerDragEndEvent e) => _googleMapState.onMarkerDragEnd(e.value, e.position));
+
     GoogleMapsFlutterPlatform.instance.onInfoWindowTap(mapId: mapId).listen(
         (InfoWindowTapEvent e) => _googleMapState.onInfoWindowTap(e.value));
     GoogleMapsFlutterPlatform.instance
@@ -319,5 +326,25 @@ class GoogleMapController {
 
   Future<void> appendPolylinePoints(PolylineId polylineId, List<dynamic> points) {
     return _googleMapsFlutterPlatform.appendPolylinePoints(polylineId, points, mapId: mapId);
+  }
+
+  Future<void> updateRiderMarkers(Set<Marker> markers) {
+    return _googleMapsFlutterPlatform.vdUpdateRiderMarkers(markers, mapId: mapId);
+  }
+
+  Future<void> updateClusterMarkers(Set<Marker> markers) {
+    return _googleMapsFlutterPlatform.vdUpdateClusterMarkers(markers, mapId: mapId);
+  }
+
+  Future<void> removeMarkers(Set<MarkerId> markerIds) {
+    return _googleMapsFlutterPlatform.vdRemoveMarkers(markerIds, mapId: mapId);
+  }
+
+  Future<void> addSelfMarker(Marker marker) {
+    return _googleMapsFlutterPlatform.vdAddSelfMarker(marker, mapId: mapId);
+  }
+
+  Future<void> updateSelfMarker(Marker marker) {
+    return _googleMapsFlutterPlatform.vdUpdateSelfMarker(marker, mapId: mapId);
   }
 }

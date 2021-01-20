@@ -4,9 +4,11 @@
 
 package io.flutter.plugins.googlemaps;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Point;
+import android.graphics.*;
+import android.graphics.Bitmap.Config;
+import android.graphics.PorterDuff.Mode;
+import android.os.Environment;
+import android.util.Log;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -30,6 +32,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.File;
 
 /** Conversions between JSON-like values and GoogleMaps data types. */
 class Convert {
@@ -64,6 +67,8 @@ class Convert {
         }
       case "fromBytes":
         return getBitmapFromBytes(data);
+      case "fromBitmap":
+        return BitmapDescriptorFactory.fromBitmap((Bitmap) data.get(1));
       default:
         throw new IllegalArgumentException("Cannot interpret " + o + " as BitmapDescriptor");
     }

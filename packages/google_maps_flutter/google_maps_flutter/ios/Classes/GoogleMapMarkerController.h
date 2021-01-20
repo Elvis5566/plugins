@@ -50,6 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)showMarkerInfoWindow:(NSString*)markerId result:(FlutterResult)result;
 - (void)hideMarkerInfoWindow:(NSString*)markerId result:(FlutterResult)result;
 - (void)isMarkerInfoWindowShown:(NSString*)markerId result:(FlutterResult)result;
+- (BOOL)checkMarkerIsExist:(NSString*)markerId;
 @end
 
 NS_ASSUME_NONNULL_END

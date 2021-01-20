@@ -217,7 +217,18 @@ static UIImage* ExtractIcon(NSObject<FlutterPluginRegistrar>* registrar, NSArray
                                        reason:@"Unable to interpret bytes as a valid image."
                                      userInfo:nil];
       }
-    } else {
+    }
+  } else if ([iconData[0] isEqualToString:@"fromUIImage"]) {
+      if (iconData.count == 2) {
+        @try {
+            image = iconData[1];
+        } @catch (NSException* exception) {
+          @throw [NSException exceptionWithName:@"InvalidFromUIImage"
+                                         reason:@"Unable to load custom UIImage"
+                                       userInfo:nil];
+        }
+      }
+  } else {
       NSString* error = [NSString
           stringWithFormat:@"fromBytes should have exactly one argument, the bytes. Got: %lu",
                            (unsigned long)iconData.count];
@@ -225,7 +236,6 @@ static UIImage* ExtractIcon(NSObject<FlutterPluginRegistrar>* registrar, NSArray
                                                        reason:error
                                                      userInfo:nil];
       @throw exception;
-    }
   }
 
   return image;
@@ -349,6 +359,10 @@ static UIImage* ExtractIcon(NSObject<FlutterPluginRegistrar>* registrar, NSArray
                                message:@"isInfoWindowShown called with invalid markerId"
                                details:nil]);
   }
+}
+
+- (BOOL)checkMarkerIsExist:(NSString *)markerId {
+    return _markerIdToController[markerId] != nil;
 }
 
 + (CLLocationCoordinate2D)getPosition:(NSDictionary*)marker {

@@ -13,6 +13,7 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.content.res.AssetManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -88,6 +89,11 @@ final class GoogleMapController
   private List<Object> initialPolylines;
   private List<Object> initialCircles;
   private List<Map<String, ?>> initialTileOverlays;
+  private final AssetManager mgr;
+  private final Bitmap riderLeftStatus;
+  private final Bitmap riderLostStatus;
+  private final Bitmap riderPauseStatus;
+  private final Bitmap riderWeakSignalStatus;
 
   private List<LatLng> navigationPoints;
 
@@ -110,6 +116,11 @@ final class GoogleMapController
     this.polylinesController = new PolylinesController(methodChannel, density);
     this.circlesController = new CirclesController(methodChannel, density);
     this.tileOverlaysController = new TileOverlaysController(methodChannel);
+    this.mgr = context.getAssets();
+    this.riderLeftStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_left_png.png");
+    this.riderLostStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_lost_png.png");
+    this.riderPauseStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_pause_png.png");
+    this.riderWeakSignalStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_weak_signal_png.png");
   }
 
   @Override
@@ -378,6 +389,119 @@ final class GoogleMapController
           result.success(null);
           break;
         }
+      case "map#initMarker":
+      {
+        List<Object> markersToAdd = call.argument("markers");
+        markersController.addMarkers(markersToAdd);
+        break;
+      }
+      case "map#updateMarker":
+      {
+        List<Object> markersToChange = call.argument("markers");
+        markersController.changeMarkers(markersToChange);
+        break;
+      }
+      case "map#updateRiderMarkers":
+      {
+        List<Object> markersToUpdate = call.argument("markers");
+        List<Object> markersToChange = new ArrayList<Object>();
+        List<Object> markersToAdd = new ArrayList<Object>();
+
+        long start = System.currentTimeMillis();
+        for (Object marker : markersToUpdate) {
+          final Map<String, ? super Object> data = (Map<String, ? super Object>) marker;
+          final Map<String, ?> extra = (Map<String, ? super Object>) data.get("extra");
+
+          if (extra == null || extra.isEmpty()) {
+            data.put("icon", null);
+            markersToChange.add(marker);
+          } else {
+            Bitmap bitmap;
+            final String path = (String) extra.get("path");
+            final String name = (String) extra.get("name");
+            final int rideStatus = (int) extra.get("rideStatus");
+            if (path != null) {
+              bitmap = MarkerIconPainter.getBitmapFromPath(path, density);
+            } else {
+              bitmap = MarkerIconPainter.getBitmapFromText(name, density);
+            }
+            Bitmap bitmapWithStatus;
+            switch (rideStatus) {
+              case 1:
+                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderPauseStatus, density);
+                break;
+              case 2:
+                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderLostStatus, density);
+                break;
+              case 3:
+                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderLeftStatus, density);
+                break;
+              default:
+                bitmapWithStatus = bitmap;
+                break;
+            }
+            final List<Object> icon = new ArrayList<Object>();
+            icon.add((Object) "fromBitmap");
+            icon.add((Object) bitmapWithStatus);
+            data.put("icon", icon);
+            if (markersController.checkMarkerIsExist((String) data.get("markerId"))) {
+              markersToChange.add(marker);
+            } else {
+              markersToAdd.add(marker);
+            }
+          }
+        }
+        long end = System.currentTimeMillis() - start;
+        Log.d("map#updateRiderMarkers", "execute size: " + String.valueOf(markersToUpdate.size()) + " execute time: " + String.valueOf(end) + "ms = " + String.valueOf(end / 1000) + "s");
+
+        markersController.addMarkers(markersToAdd);
+        markersController.changeMarkers(markersToChange);
+        result.success(null);
+        break;
+      }
+      case "map#updateClusterMarkers":
+      {
+        List<Object> markersToUpdate = call.argument("markers");
+        List<Object> markersToChange = new ArrayList<Object>();
+        List<Object> markersToAdd = new ArrayList<Object>();
+
+        long start = System.currentTimeMillis();
+        for (Object marker : markersToUpdate) {
+          final Map<String, ? super Object> data = (Map<String, ? super Object>) marker;
+          final Map<String, ?> extra = (Map<String, ? super Object>) data.get("extra");
+
+          if (extra == null || extra.isEmpty()) {
+            data.put("icon", null);
+            markersToChange.add(marker);
+          } else {
+            final int count = (int) extra.get("count");
+            Bitmap bitmap = MarkerIconPainter.getBitmapFromCluster(count, density);
+            final List<Object> icon = new ArrayList<Object>();
+            icon.add((Object) "fromBitmap");
+            icon.add((Object) bitmap);
+            data.put("icon", icon);
+            if (markersController.checkMarkerIsExist((String) data.get("markerId"))) {
+              markersToChange.add(marker);
+            } else {
+              markersToAdd.add(marker);
+            }
+          }
+        }
+        long end = System.currentTimeMillis() - start;
+        Log.d("map#updateClusterMarkers", "execute size: " + String.valueOf(markersToUpdate.size()) + " execute time: " + String.valueOf(end) + "ms = " + String.valueOf(end / 1000) + "s");
+
+        markersController.addMarkers(markersToAdd);
+        markersController.changeMarkers(markersToChange);
+        result.success(null);
+        break;
+      }
+      case "map#removeMarkers":
+      {
+        List<Object> markerIdsToRemove = call.argument("markerIds");
+        markersController.removeMarkers(markerIdsToRemove);
+        result.success(null);
+        break;
+      }
       case "markers#showInfoWindow":
         {
           Object markerId = call.argument("markerId");

@@ -157,4 +157,8 @@ class MarkersController {
     Map<String, Object> markerMap = (Map<String, Object>) marker;
     return (String) markerMap.get("markerId");
   }
+
+  public boolean checkMarkerIsExist(String markerId) {
+    return markerIdToController.get(markerId) != null;
+  }
 }

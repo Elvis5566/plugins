@@ -148,7 +148,10 @@ class Marker implements MapsObject {
     this.zIndex = 0.0,
     this.onTap,
     this.onDragEnd,
-  }) : assert(alpha == null || (0.0 <= alpha && alpha <= 1.0));
+    Map<String, dynamic> extra,
+  })
+      : assert(alpha == null || (0.0 <= alpha && alpha <= 1.0)),
+        extra = extra ?? const <String, dynamic>{};
 
   /// Uniquely identifies a [Marker].
   final MarkerId markerId;
@@ -210,6 +213,8 @@ class Marker implements MapsObject {
   /// Signature reporting the new [LatLng] at the end of a drag event.
   final ValueChanged<LatLng>? onDragEnd;
 
+  final Map<String, dynamic> extra;
+
   /// Creates a new [Marker] object whose values are the same as this instance,
   /// unless overwritten by the specified parameters.
   Marker copyWith({
@@ -270,6 +275,7 @@ class Marker implements MapsObject {
     addIfPresent('rotation', rotation);
     addIfPresent('visible', visible);
     addIfPresent('zIndex', zIndex);
+    addIfPresent('extra', extra);
     return json;
   }
 

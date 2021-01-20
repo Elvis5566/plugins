@@ -637,4 +637,34 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
       "points": points,
     });
   }
+
+  Future<void> vdUpdateRiderMarkers(Set<Marker> markers, {@required int mapId}) {
+    return channel(mapId).invokeMethod<void>('map#updateRiderMarkers', {
+      'markers': serializeMarkerSet(markers),
+    });
+  }
+
+  Future<void> vdUpdateClusterMarkers(Set<Marker> markers, {@required int mapId}) {
+    return channel(mapId).invokeMethod<void>('map#updateClusterMarkers', {
+      'markers': serializeMarkerSet(markers),
+    });
+  }
+
+  Future<void> vdRemoveMarkers(Set<MarkerId> markerIds, {@required int mapId}) {
+    return channel(mapId).invokeMethod<void>('map#removeMarkers', {
+      'markerIds': markerIds.map<dynamic>((MarkerId m) => m.value).toList(),
+    });
+  }
+
+  Future<void> vdAddSelfMarker(Marker marker, {@required int mapId}) {
+    return channel(mapId).invokeMethod<void>('map#initMarker', {
+      'markers': serializeMarkerSet({marker}),
+    });
+  }
+
+  Future<void> vdUpdateSelfMarker(Marker marker, {@required int mapId}) {
+    return channel(mapId).invokeMethod<void>('map#updateMarker', {
+      'markers': serializeMarkerSet({marker}),
+    });
+  }
 }

@@ -79,7 +79,7 @@ static int getClusterSize(int index) {
         return toAvatar([UIImage imageWithContentsOfFile:path]);
     } @catch (NSException *exception) {
         @throw [NSException exceptionWithName:@"getUIImageFromPathInvalidPath"
-                                       reason:@"unable to load image from path"
+                                       reason:[NSString stringWithFormat:@"%@%@", @"unable to load image from path", path]
                                      userInfo:nil];
     }
 }

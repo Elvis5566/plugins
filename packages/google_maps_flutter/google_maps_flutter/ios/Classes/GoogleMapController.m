@@ -419,7 +419,7 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
               NSString* name = extra[@"name"];
               NSNumber* rideStatus = extra[@"rideStatus"];
               UIImage* image;
-              if (path != nil) {
+              if (path != nil && path != [NSNull null]) {
                   image = [_markerIconPainter getUIImageFromPath:path];
               } else {
                   image = [_markerIconPainter getUIImageFromText:name];

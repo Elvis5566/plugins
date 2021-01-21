@@ -117,10 +117,10 @@ final class GoogleMapController
     this.circlesController = new CirclesController(methodChannel, density);
     this.tileOverlaysController = new TileOverlaysController(methodChannel);
     this.mgr = context.getAssets();
-    this.riderLeftStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_left_png.png");
-    this.riderLostStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_lost_png.png");
-    this.riderPauseStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_pause_png.png");
-    this.riderWeakSignalStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_weak_signal_png.png");
+    this.riderLeftStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_left_png.png", density);
+    this.riderLostStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_lost_png.png", density);
+    this.riderPauseStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_pause_png.png", density);
+    this.riderWeakSignalStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_weak_signal_png.png", density);
   }
 
   @Override

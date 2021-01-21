@@ -29,7 +29,7 @@ class MarkerIconPainter {
         }
     }
 
-    public static Bitmap getBitmapFromAsset(AssetManager mgr, String assetName) {
+    public static Bitmap getBitmapFromAsset(AssetManager mgr, String assetName, float density) {
         InputStream is = null;
         Bitmap bitmap = null;
 
@@ -37,6 +37,14 @@ class MarkerIconPainter {
             Log.d("getBitmapFromAsset", FlutterMain.getLookupKeyForAsset(assetName));
             is = mgr.open(FlutterMain.getLookupKeyForAsset(assetName));
             bitmap = BitmapFactory.decodeStream(is);
+
+            final float widthRatio =  (int) Math.ceil(24 * density) / bitmap.getWidth();
+            final float heightRatio = (int) Math.ceil(24 * density) / bitmap.getHeight();
+
+            final float ratio = Math.max(widthRatio, heightRatio);
+            if (ratio > 1.0f) {
+                bitmap = scaleBitmap(bitmap, ratio);
+            }
         } catch (final IOException e) {
             bitmap = null;
         } finally {
@@ -81,7 +89,7 @@ class MarkerIconPainter {
         textPaint.setTextSize(fontSize * density);
         textPaint.getTextBounds(text, 0, text.length(), textBoxRect);
         textPaint.setTypeface(typeface);
-        float y = iconSize / 2f + textBoxRect.height() / 2f - textBoxRect.bottom;
+        float y = targetSize / 2f + textBoxRect.height() / 2f - textBoxRect.bottom;
         canvas.drawText(text, rectF.centerX(), y, textPaint);
 
         return output;
@@ -132,7 +140,7 @@ class MarkerIconPainter {
     }
 
     public static Bitmap combineAvatarAndStatus(Bitmap avatar, Bitmap status, float density) {
-        int paddingSize = (int) Math.ceil(2 * density);
+        int paddingSize = (int) Math.ceil(3 * density);
         int widthLight = avatar.getWidth() + paddingSize * 2;
         int heightLight = avatar.getHeight() + paddingSize * 2;
 

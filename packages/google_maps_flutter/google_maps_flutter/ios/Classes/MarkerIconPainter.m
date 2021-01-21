@@ -85,13 +85,14 @@ static int getClusterSize(int index) {
 }
 
 - (UIImage*) getUIImageFromAsset:(NSString *)assetName {
-    return [UIImage imageNamed:[_registrar lookupKeyForAsset:assetName]];
+UIImage* status = [UIImage imageNamed:[_registrar lookupKeyForAsset:assetName]];
+    status = scaleImage(status, [[NSNumber alloc] initWithFloat:status.size.width / 24]);
+    return status;
 }
 
 - (UIImage*) combineAvatarAndStatus:(UIImage *)avatar status:(UIImage *)status {
     float iconSize = avatar.size.width;
     float paddingSize = 2.0;
-    status = scaleImage(status, [[NSNumber alloc] initWithFloat:status.size.width / 24]);
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(iconSize + paddingSize * 2, iconSize + paddingSize * 2), NO, 0.0);
     
     [avatar drawInRect:CGRectMake(0, paddingSize * 2, iconSize, iconSize)];

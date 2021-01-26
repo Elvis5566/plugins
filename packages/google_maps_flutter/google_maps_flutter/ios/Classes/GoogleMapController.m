@@ -67,7 +67,6 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
   UIImage* riderLeftStatus;
   UIImage* riderLostStatus;
   UIImage* riderPauseStatus;
-  UIImage* riderWeakSignalStatus;
   NSArray<CLLocation*> *navigationPoints;
 }
 
@@ -114,7 +113,7 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
 
     _markerIconPainter = [[MarkerIconPainter alloc] init:registrar];
     riderLeftStatus = [_markerIconPainter getUIImageFromAsset:@"common_app/assets/rider_left_png.png"];
-    riderLostStatus = [_markerIconPainter getUIImageFromAsset:@"common_app/assets/rider_lost_png.png"];
+    riderLostStatus = [_markerIconPainter getUIImageFromAsset:@"common_app/assets/rider_disconnected_png.png"];
     riderPauseStatus = [_markerIconPainter getUIImageFromAsset:@"common_app/assets/rider_pause_png.png"];
     riderWeakSignalStatus = [_markerIconPainter getUIImageFromAsset:@"common_app/assets/rider_weak_signal_png.png"];
 

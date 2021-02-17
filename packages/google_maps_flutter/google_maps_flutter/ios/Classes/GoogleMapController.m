@@ -133,10 +133,13 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
     if ([circlesToAdd isKindOfClass:[NSArray class]]) {
       [_circlesController addCircles:circlesToAdd];
     }
+
     id tileOverlaysToAdd = args[@"tileOverlaysToAdd"];
     if ([tileOverlaysToAdd isKindOfClass:[NSArray class]]) {
       [_tileOverlaysController addTileOverlays:tileOverlaysToAdd];
     }
+
+    [_mapView addObserver:self forKeyPath:@"frame" options:0 context:nil];
   }
   return self;
 }
@@ -192,7 +195,6 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
 }
 
 - (UIView*)view {
-  [_mapView addObserver:self forKeyPath:@"frame" options:0 context:nil];
   return _mapView;
 }
 
@@ -200,11 +202,6 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
                       ofObject:(id)object
                         change:(NSDictionary*)change
                        context:(void*)context {
-  if (_cameraDidInitialSetup) {
-    // We only observe the frame for initial setup.
-    [_mapView removeObserver:self forKeyPath:@"frame"];
-    return;
-  }
   if (object == _mapView && [keyPath isEqualToString:@"frame"]) {
     CGRect bounds = _mapView.bounds;
     if (CGRectEqualToRect(bounds, CGRectZero)) {

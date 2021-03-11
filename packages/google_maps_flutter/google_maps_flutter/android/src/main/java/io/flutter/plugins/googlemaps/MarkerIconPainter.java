@@ -38,13 +38,11 @@ class MarkerIconPainter {
             is = mgr.open(FlutterMain.getLookupKeyForAsset(assetName));
             bitmap = BitmapFactory.decodeStream(is);
 
-            final float widthRatio =  (int) Math.ceil(24 * density) / bitmap.getWidth();
-            final float heightRatio = (int) Math.ceil(24 * density) / bitmap.getHeight();
+            final float widthRatio =  (float) Math.ceil(24 * density) / bitmap.getWidth();
+            final float heightRatio = (float) Math.ceil(24 * density) / bitmap.getHeight();
 
             final float ratio = Math.max(widthRatio, heightRatio);
-            if (ratio > 1.0f) {
-                bitmap = scaleBitmap(bitmap, ratio);
-            }
+            bitmap = scaleBitmap(bitmap, ratio);
         } catch (final IOException e) {
             bitmap = null;
         } finally {

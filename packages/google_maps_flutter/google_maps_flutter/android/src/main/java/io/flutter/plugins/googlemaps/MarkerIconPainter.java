@@ -38,7 +38,7 @@ class MarkerIconPainter {
             is = mgr.open(FlutterMain.getLookupKeyForAsset(assetName));
             bitmap = BitmapFactory.decodeStream(is);
 
-            final float widthRatio =  (float) Math.ceil(24 * density) / bitmap.getWidth();
+            final float widthRatio = (float) Math.ceil(24 * density) / bitmap.getWidth();
             final float heightRatio = (float) Math.ceil(24 * density) / bitmap.getHeight();
 
             final float ratio = Math.max(widthRatio, heightRatio);
@@ -121,6 +121,42 @@ class MarkerIconPainter {
         return output;
     }
 
+    public static Bitmap combineAvatarAndStatus(Bitmap avatar, Bitmap status, float density) {
+        int paddingSize = (int) Math.ceil(3 * density);
+        int widthLight = avatar.getWidth() + paddingSize * 2;
+        int heightLight = avatar.getHeight() + paddingSize * 2;
+
+        Bitmap output = Bitmap.createBitmap(widthLight, heightLight, Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+
+        canvas.drawBitmap(avatar, paddingSize, paddingSize, null);
+        canvas.drawBitmap(status, widthLight - status.getWidth() - paddingSize, 0, null);
+
+        return output;
+    }
+
+    public static Bitmap withSos(Bitmap avatar, float density) {
+        int shadowSize = (int) Math.ceil(8 * density);
+        int offset = (int) Math.ceil(2 * density);
+        int widthLight = avatar.getWidth() + shadowSize * 2;
+        int heightLight = avatar.getHeight() + shadowSize * 2;
+
+        Bitmap output = Bitmap.createBitmap(widthLight, heightLight, Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+
+        Paint shadowPaint = new Paint();
+        shadowPaint.setShadowLayer(40.0f, 0.f, 0.f, Color.RED);
+        shadowPaint.setColor(Color.RED);
+        RectF rectF = new RectF(new Rect(shadowSize + offset, shadowSize + offset, avatar.getWidth() + shadowSize - offset, avatar.getWidth() + shadowSize - offset));
+        canvas.drawOval(rectF, shadowPaint);
+
+        Paint paintImage = new Paint();
+        paintImage.setXfermode(new PorterDuffXfermode(Mode.SRC_ATOP));
+        canvas.drawBitmap(avatar, shadowSize, shadowSize, paintImage);
+
+        return output;
+    }
+
     private static int getClusterSize(int index) {
         if (index >= 1000) {
             return 60;
@@ -135,20 +171,6 @@ class MarkerIconPainter {
         } else {
             return 40;
         }
-    }
-
-    public static Bitmap combineAvatarAndStatus(Bitmap avatar, Bitmap status, float density) {
-        int paddingSize = (int) Math.ceil(3 * density);
-        int widthLight = avatar.getWidth() + paddingSize * 2;
-        int heightLight = avatar.getHeight() + paddingSize * 2;
-
-        Bitmap output = Bitmap.createBitmap(widthLight, heightLight, Config.ARGB_8888);
-        Canvas canvas = new Canvas(output);
-
-        canvas.drawBitmap(avatar, paddingSize, paddingSize, null);
-        canvas.drawBitmap(status, widthLight - status.getWidth() - paddingSize, 0, null);
-
-        return output;
     }
 
     private static Bitmap toAvatar(Bitmap avatar, double density) {
@@ -189,15 +211,12 @@ class MarkerIconPainter {
 
         final int targetAvatarWidth = (int) Math.ceil(avatarWidth * density);
         final int targetAvatarHeight = (int) Math.ceil(avatarHeight * density);
-        final float widthRatio = targetAvatarWidth / avatar.getWidth();
-        final float heightRatio = targetAvatarHeight / avatar.getHeight();
+
+        final float widthRatio = (float) targetAvatarWidth / avatar.getWidth();
+        final float heightRatio = (float) targetAvatarHeight / avatar.getHeight();
 
         final float ratio = Math.max(widthRatio, heightRatio);
-        if (ratio > 1.0f) {
-            return scaleBitmap(avatar, ratio);
-        }
-
-        return avatar;
+        return scaleBitmap(avatar, ratio);
     }
 
     private static Bitmap scaleBitmap(Bitmap src, float ratio) {

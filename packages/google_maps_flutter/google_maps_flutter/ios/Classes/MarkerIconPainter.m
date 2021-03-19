@@ -20,9 +20,9 @@ static UIImage* scaleImage(UIImage* image, NSNumber* scaleParam) {
   return image;
 }
 
-static UIImage* toAvatar(UIImage* image) {
-    float iconSize = 48.0;
-    float borderSize = 4.0;
+static UIImage* toAvatar(UIImage* image, NSNumber* ratio) {
+    float iconSize = 48.0 * ratio.floatValue;
+    float borderSize = 4.0 * ratio.floatValue;
     image = scaleImage(image, [[NSNumber alloc] initWithFloat:image.size.width / iconSize]);
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(iconSize + borderSize * 2, iconSize + borderSize * 2), NO, 0.0);
     CGContextRef context = UIGraphicsGetCurrentContext();
@@ -74,9 +74,9 @@ static int getClusterSize(int index) {
   return self;
 }
 
-- (UIImage*) getUIImageFromPath:(NSString *)path {
+- (UIImage*) getUIImageFromPath:(NSString *)path ratio:(NSNumber *)ratio {
     @try {
-        return toAvatar([UIImage imageWithContentsOfFile:path]);
+        return toAvatar([UIImage imageWithContentsOfFile:path], ratio);
     } @catch (NSException *exception) {
         @throw [NSException exceptionWithName:@"getUIImageFromPathInvalidPath"
                                        reason:[NSString stringWithFormat:@"%@%@", @"unable to load image from path", path]
@@ -85,27 +85,26 @@ static int getClusterSize(int index) {
 }
 
 - (UIImage*) getUIImageFromAsset:(NSString *)assetName {
-UIImage* status = [UIImage imageNamed:[_registrar lookupKeyForAsset:assetName]];
+    UIImage* status = [UIImage imageNamed:[_registrar lookupKeyForAsset:assetName]];
     status = scaleImage(status, [[NSNumber alloc] initWithFloat:status.size.width / 24]);
     return status;
 }
 
 - (UIImage*) combineAvatarAndStatus:(UIImage *)avatar status:(UIImage *)status {
-    float iconSize = avatar.size.width;
     float paddingSize = 2.0;
-    UIGraphicsBeginImageContextWithOptions(CGSizeMake(iconSize + paddingSize * 2, iconSize + paddingSize * 2), NO, 0.0);
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(avatar.size.width + paddingSize * 2, avatar.size.height + paddingSize * 2), NO, 0.0);
     
-    [avatar drawInRect:CGRectMake(0, paddingSize * 2, iconSize, iconSize)];
-    [status drawInRect:CGRectMake(iconSize + paddingSize * 2 - status.size.width, 0, status.size.width, status.size.height)];
+    [avatar drawInRect:CGRectMake(0, paddingSize * 2, avatar.size.width, avatar.size.height)];
+    [status drawInRect:CGRectMake(avatar.size.width + paddingSize * 2 - status.size.width, 0, status.size.width, status.size.height)];
 
     UIImage* view = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return view;
 }
 
-- (UIImage*) getUIImageFromText:(NSString *)text {
-    float iconSize = 48.0;
-    float borderSize = 4.0;
+- (UIImage*) getUIImageFromText:(NSString *)text ratio:(NSNumber *)ratio {
+    float iconSize = 48.0 * ratio.floatValue;
+    float borderSize = 4.0 * ratio.floatValue;
     
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(iconSize + borderSize * 2, iconSize + borderSize * 2), NO, 0.0);
     CGContextRef context = UIGraphicsGetCurrentContext();
@@ -172,6 +171,35 @@ UIImage* status = [UIImage imageNamed:[_registrar lookupKeyForAsset:assetName]];
     
     UIImage* view = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
+    return view;
+}
+
+- (UIImage*) withSos:(UIImage *)avatar ratio:(NSNumber *)ratio {
+    float shadowSize = 6 * ratio.floatValue;
+    float iconSize = avatar.size.width + shadowSize * 2;
+    CGPoint center = CGPointMake(iconSize / 2, iconSize / 2);
+    float radius = iconSize / 2;
+    CGRect ellipseRect = CGRectMake(0, 0, iconSize, iconSize);
+    
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(iconSize, iconSize), NO, 0.0);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    
+    CGFloat colors[] = {
+        1.0, 0.0, 0.0, 0.3,
+        1.0, 0.0, 0.0, 0.8,
+    };
+    CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
+    CGGradientRef gradientref = CGGradientCreateWithColorComponents(colorSpaceRef, colors, NULL, 2);
+    CGContextAddEllipseInRect(context, ellipseRect);
+    CGContextClip(context);
+    
+    CGContextDrawRadialGradient(context, gradientref, center, radius, center, radius - shadowSize, kCGGradientDrawsAfterEndLocation);
+    
+    [avatar drawInRect:CGRectMake(shadowSize, shadowSize, avatar.size.width, avatar.size.height)];
+
+    UIImage* view = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
     return view;
 }
 

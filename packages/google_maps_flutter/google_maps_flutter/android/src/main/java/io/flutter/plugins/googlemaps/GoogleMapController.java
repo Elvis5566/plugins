@@ -419,22 +419,26 @@ final class GoogleMapController
             Bitmap bitmap;
             final String path = (String) extra.get("path");
             final String name = (String) extra.get("name");
-            final int rideStatus = (int) extra.get("rideStatus");
+            final int rideStatus = (int) (extra.containsKey("rideStatus") ? extra.get("rideStatus") : 0);
+            final float ratio = (float) (extra.containsKey("ratio") ? ((Double) extra.get("ratio")).floatValue() : 1.0f);
             if (path != null) {
-              bitmap = MarkerIconPainter.getBitmapFromPath(path, density);
+              bitmap = MarkerIconPainter.getBitmapFromPath(path, density * ratio);
             } else {
-              bitmap = MarkerIconPainter.getBitmapFromText(name, density);
+              bitmap = MarkerIconPainter.getBitmapFromText(name, density * ratio);
             }
             Bitmap bitmapWithStatus;
             switch (rideStatus) {
               case 1:
-                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderPauseStatus, density);
+                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderPauseStatus, density * ratio);
                 break;
               case 2:
-                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderLostStatus, density);
+                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderLostStatus, density * ratio);
                 break;
               case 3:
-                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderLeftStatus, density);
+                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderLeftStatus, density * ratio);
+                break;
+              case 5:
+                bitmapWithStatus = MarkerIconPainter.withSos(bitmap, density * ratio);
                 break;
               default:
                 bitmapWithStatus = bitmap;

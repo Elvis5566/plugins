@@ -409,11 +409,14 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
               NSString* path = extra[@"path"];
               NSString* name = extra[@"name"];
               NSNumber* rideStatus = extra[@"rideStatus"];
+              if (!rideStatus) rideStatus = [NSNumber numberWithInt:0];
+              NSNumber* ratio = extra[@"ratio"];
+              if (!ratio) ratio = [NSNumber numberWithFloat:0.0];
               UIImage* image;
               if (path != nil && path != [NSNull null]) {
-                  image = [_markerIconPainter getUIImageFromPath:path];
+                  image = [_markerIconPainter getUIImageFromPath:path ratio:ratio];
               } else {
-                  image = [_markerIconPainter getUIImageFromText:name];
+                  image = [_markerIconPainter getUIImageFromText:name ratio:ratio];
               }
               UIImage* imageWithStatus;
               switch (rideStatus.intValue) {
@@ -425,6 +428,9 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
                       break;
                   case 3:
                       imageWithStatus = [_markerIconPainter combineAvatarAndStatus:image status:riderLeftStatus];
+                      break;
+                  case 5:
+                      imageWithStatus = [_markerIconPainter withSos:image ratio:ratio];
                       break;
                   default:
                       imageWithStatus = image;

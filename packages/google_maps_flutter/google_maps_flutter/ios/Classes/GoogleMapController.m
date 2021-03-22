@@ -411,7 +411,7 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
               NSNumber* rideStatus = extra[@"rideStatus"];
               if (!rideStatus) rideStatus = [NSNumber numberWithInt:0];
               NSNumber* ratio = extra[@"ratio"];
-              if (!ratio) ratio = [NSNumber numberWithFloat:0.0];
+              if (!ratio) ratio = [NSNumber numberWithFloat:1.0];
               UIImage* image;
               if (path != nil && path != [NSNull null]) {
                   image = [_markerIconPainter getUIImageFromPath:path ratio:ratio];

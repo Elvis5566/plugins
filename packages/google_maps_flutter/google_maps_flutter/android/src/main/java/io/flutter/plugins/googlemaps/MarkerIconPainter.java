@@ -145,7 +145,7 @@ class MarkerIconPainter {
         Canvas canvas = new Canvas(output);
 
         Paint shadowPaint = new Paint();
-        shadowPaint.setShadowLayer(40.0f, 0.f, 0.f, Color.RED);
+        shadowPaint.setShadowLayer(20.0f, 0.f, 0.f, Color.RED);
         shadowPaint.setColor(Color.RED);
         RectF rectF = new RectF(new Rect(shadowSize + offset, shadowSize + offset, avatar.getWidth() + shadowSize - offset, avatar.getWidth() + shadowSize - offset));
         canvas.drawOval(rectF, shadowPaint);

@@ -180,26 +180,35 @@ static int getClusterSize(int index) {
     CGPoint center = CGPointMake(iconSize / 2, iconSize / 2);
     float radius = iconSize / 2;
     CGRect ellipseRect = CGRectMake(0, 0, iconSize, iconSize);
-    
+
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(iconSize, iconSize), NO, 0.0);
     CGContextRef context = UIGraphicsGetCurrentContext();
-    
+
     CGFloat colors[] = {
+        1.0, 0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0, 0.1,
+        1.0, 0.0, 0.0, 0.15,
+        1.0, 0.0, 0.0, 0.2,
+        1.0, 0.0, 0.0, 0.25,
         1.0, 0.0, 0.0, 0.3,
-        1.0, 0.0, 0.0, 0.8,
+        1.0, 0.0, 0.0, 0.31,
+        1.0, 0.0, 0.0, 0.32,
+        1.0, 0.0, 0.0, 0.33,
+        1.0, 0.0, 0.0, 0.65,
+        1.0, 0.0, 0.0, 0.7,
     };
     CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
-    CGGradientRef gradientref = CGGradientCreateWithColorComponents(colorSpaceRef, colors, NULL, 2);
+    CGGradientRef gradientref = CGGradientCreateWithColorComponents(colorSpaceRef, colors, NULL, 11);
     CGContextAddEllipseInRect(context, ellipseRect);
     CGContextClip(context);
-    
+
     CGContextDrawRadialGradient(context, gradientref, center, radius, center, radius - shadowSize, kCGGradientDrawsAfterEndLocation);
-    
+
     [avatar drawInRect:CGRectMake(shadowSize, shadowSize, avatar.size.width, avatar.size.height)];
 
     UIImage* view = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
-    
+
     return view;
 }
 

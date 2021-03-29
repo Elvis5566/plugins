@@ -17,11 +17,57 @@ import java.io.IOException;
 import io.flutter.view.FlutterMain;
 
 class MarkerIconPainter {
+    private AssetManager mgr;
+    private float density;
 
-    private static int avatarWidth = 48;
-    private static int avatarHeight = 48;
+    private int avatarWidth = 48;
+    private int avatarHeight = 48;
 
-    public static Bitmap getBitmapFromPath(String path, float density) {
+    private Bitmap riderLeftStatus;
+    private Bitmap riderLostStatus;
+    private Bitmap riderPauseStatus;
+
+    MarkerIconPainter(AssetManager mgr, float density) {
+        this.mgr = mgr;
+        this.riderLeftStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_left_png.png", density);;
+        this.riderLostStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_disconnected_png.png", density);
+        this.riderPauseStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_pause_png.png", density);
+    }
+
+
+
+    public Bitmap getRiderAvatar(String path, String name, int status, float density, float ratio) {
+        Bitmap bitmap;
+        if (path != null && !path.isEmpty()) {
+            bitmap = getBitmapFromPath(path, density * ratio);
+        } else {
+            bitmap = getBitmapFromText(name, density * ratio);
+        }
+
+        Bitmap bitmapWithStatus;
+
+        switch (status) {
+            case 1:
+                bitmapWithStatus = combineAvatarAndStatus(bitmap, riderLeftStatus, density);
+                break;
+            case 2:
+                bitmapWithStatus = combineAvatarAndStatus(bitmap, riderLostStatus, density);
+                break;
+            case 3:
+                bitmapWithStatus = combineAvatarAndStatus(bitmap, riderPauseStatus, density);
+                break;
+            case 5:
+                bitmapWithStatus = withSos(bitmap, density * ratio);
+                break;
+            default:
+                bitmapWithStatus = bitmap;
+                break;
+        }
+
+        return bitmapWithStatus;
+    }
+
+    private Bitmap getBitmapFromPath(String path, float density) {
         try {
             return toAvatar(fromPathToBitmap(path, density), density);
         } catch (Exception e) {
@@ -29,7 +75,7 @@ class MarkerIconPainter {
         }
     }
 
-    public static Bitmap getBitmapFromAsset(AssetManager mgr, String assetName, float density) {
+    private Bitmap getBitmapFromAsset(AssetManager mgr, String assetName, float density) {
         InputStream is = null;
         Bitmap bitmap = null;
 
@@ -57,7 +103,7 @@ class MarkerIconPainter {
         return bitmap;
     }
 
-    public static Bitmap getBitmapFromText(String text, float density) {
+    private Bitmap getBitmapFromText(String text, float density) {
         int iconSize = (int) Math.ceil(avatarWidth * density);
         int borderSize = (int) Math.ceil(4 * density);
         int targetSize = iconSize + borderSize * 2;
@@ -93,7 +139,7 @@ class MarkerIconPainter {
         return output;
     }
 
-    public static Bitmap getBitmapFromCluster(int index, float density) {
+    public Bitmap getBitmapFromCluster(int index, float density) {
         int iconSize = (int) Math.ceil(getClusterSize(index) * density);
         final String text = (index >= 10) ? String.valueOf(index) + "+" : String.valueOf(index);
         final int fontSize = (index >= 100) ? 18 : 16;
@@ -121,7 +167,7 @@ class MarkerIconPainter {
         return output;
     }
 
-    public static Bitmap combineAvatarAndStatus(Bitmap avatar, Bitmap status, float density) {
+    private Bitmap combineAvatarAndStatus(Bitmap avatar, Bitmap status, float density) {
         int paddingSize = (int) Math.ceil(3 * density);
         int widthLight = avatar.getWidth() + paddingSize * 2;
         int heightLight = avatar.getHeight() + paddingSize * 2;
@@ -135,7 +181,7 @@ class MarkerIconPainter {
         return output;
     }
 
-    public static Bitmap withSos(Bitmap avatar, float density) {
+    private Bitmap withSos(Bitmap avatar, float density) {
         int shadowSize = (int) Math.ceil(8 * density);
         int offset = (int) Math.ceil(2 * density);
         int widthLight = avatar.getWidth() + shadowSize * 2;
@@ -157,7 +203,7 @@ class MarkerIconPainter {
         return output;
     }
 
-    private static int getClusterSize(int index) {
+    private int getClusterSize(int index) {
         if (index >= 1000) {
             return 60;
         } else if (index >= 500 && index < 1000) {
@@ -173,7 +219,7 @@ class MarkerIconPainter {
         }
     }
 
-    private static Bitmap toAvatar(Bitmap avatar, double density) {
+    private Bitmap toAvatar(Bitmap avatar, double density) {
         final int targetAvatarWidth = (int) Math.ceil(avatarWidth * density);
         final int targetAvatarHeight = (int) Math.ceil(avatarHeight * density);
 
@@ -198,12 +244,12 @@ class MarkerIconPainter {
         borderPaint.setStyle(Paint.Style.STROKE);
         borderPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
         borderPaint.setColor(Color.WHITE);
-        canvas.drawCircle(widthLight / 2, heightLight / 2, targetAvatarHeight / 2, borderPaint);
+        canvas.drawCircle(widthLight / 2.0f, heightLight / 2.0f, targetAvatarHeight / 2.0f, borderPaint);
 
         return output;
     }
 
-    private static Bitmap fromPathToBitmap(String path, float density) {
+    private Bitmap fromPathToBitmap(String path, float density) {
         // Convert path to bitmap
         File image = new File(path);
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
@@ -219,7 +265,7 @@ class MarkerIconPainter {
         return scaleBitmap(avatar, ratio);
     }
 
-    private static Bitmap scaleBitmap(Bitmap src, float ratio) {
+    private Bitmap scaleBitmap(Bitmap src, float ratio) {
         Matrix matrix = new Matrix();
         matrix.postScale(ratio, ratio);
         return Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), matrix, false);

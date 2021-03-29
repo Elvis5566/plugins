@@ -9,6 +9,8 @@
 #import "GoogleMapPolygonController.h"
 #import "GoogleMapPolylineController.h"
 
+@import GoogleMapsUtils;
+
 NS_ASSUME_NONNULL_BEGIN
 
 // Defines map UI options writable from Flutter.
@@ -40,12 +42,9 @@ NS_ASSUME_NONNULL_BEGIN
                     registrar:(NSObject<FlutterPluginRegistrar> *)registrar;
 - (void)showAtX:(CGFloat)x Y:(CGFloat)y;
 - (void)hide;
-- (void)animateWithCameraUpdate:(GMSCameraUpdate *)cameraUpdate;
+- (void)animateWithCameraUpdate:(GMSCameraUpdate *)cameraUpdate animationSpeed:(double)animationSpeed;
 - (void)moveWithCameraUpdate:(GMSCameraUpdate *)cameraUpdate;
 - (nullable GMSCameraPosition *)cameraPosition;
-- (void)setupMapForviewIdentifier:(int64_t)viewId
-                        arguments:(id _Nullable)args
-                        registrar:(NSObject<FlutterPluginRegistrar>*)registrar;
 @end
 
 // Allows the engine to create new Google Map instances.

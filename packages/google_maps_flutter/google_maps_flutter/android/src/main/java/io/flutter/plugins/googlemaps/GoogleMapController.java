@@ -36,6 +36,9 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
+import com.google.maps.android.collections.MarkerManager;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -74,12 +77,12 @@ final class GoogleMapController
   private boolean trafficEnabled = false;
   private boolean buildingsEnabled = true;
   private boolean disposed = false;
-  private boolean _isMapReady = false;
   private final float density;
   private MethodChannel.Result mapReadyResult;
   private final Context context;
   private final LifecycleProvider lifecycleProvider;
   private final MarkersController markersController;
+  private final ClusterController clusterController;
   private final PolygonsController polygonsController;
   private final PolylinesController polylinesController;
   private final CirclesController circlesController;
@@ -90,9 +93,9 @@ final class GoogleMapController
   private List<Object> initialCircles;
   private List<Map<String, ?>> initialTileOverlays;
   private final AssetManager mgr;
-  private final Bitmap riderLeftStatus;
-  private final Bitmap riderLostStatus;
-  private final Bitmap riderPauseStatus;
+  private ClusterManager<BClusterItem> clusterManager;
+  private BMarkerManager markerManger;
+  private MarkerIconPainter _markerIconPainter;
 
   private List<LatLng> navigationPoints;
 
@@ -111,14 +114,13 @@ final class GoogleMapController
     methodChannel.setMethodCallHandler(this);
     this.lifecycleProvider = lifecycleProvider;
     this.markersController = new MarkersController(methodChannel);
+    this.clusterController = new ClusterController(methodChannel);
     this.polygonsController = new PolygonsController(methodChannel, density);
     this.polylinesController = new PolylinesController(methodChannel, density);
     this.circlesController = new CirclesController(methodChannel, density);
     this.tileOverlaysController = new TileOverlaysController(methodChannel);
     this.mgr = context.getAssets();
-    this.riderLeftStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_left_png.png", density);
-    this.riderLostStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_disconnected_png.png", density);
-    this.riderPauseStatus = MarkerIconPainter.getBitmapFromAsset(mgr, "common_app/assets/rider_pause_png.png", density);
+    this._markerIconPainter = new MarkerIconPainter(mgr, density);
   }
 
   @Override
@@ -153,8 +155,27 @@ final class GoogleMapController
     return trackCameraPosition ? googleMap.getCameraPosition() : null;
   }
 
+  private void initClusterManager(final GoogleMap googleMap, final BMarkerManager markerManger) {
+    clusterManager = new ClusterManager<>(context, googleMap, markerManger);
+    final BClusterRendered rendered = new BClusterRendered(context, googleMap, clusterManager, _markerIconPainter);
+    rendered.setDensity(density);
+    final GridBasedAlgorithm algorithm = new  GridBasedAlgorithm();
+    algorithm.setMaxDistanceBetweenClusteredItems(50);
+    clusterManager.setAlgorithm(algorithm);
+    clusterManager.setRenderer(rendered);
+    clusterManager.setAnimation(false);
+    clusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<BClusterItem>() {
+      @Override
+      public boolean onClusterItemClick(BClusterItem item) {
+        clusterController.onClusterItemClick(item);
+        return true;
+      }
+    });
+    clusterController.setClusterManager(clusterManager);
+  }
+
   @Override
-  public void onMapReady(GoogleMap googleMap) {
+  public void onMapReady(final GoogleMap googleMap) {
     this.googleMap = googleMap;
     this.googleMap.setIndoorEnabled(this.indoorEnabled);
     this.googleMap.setTrafficEnabled(this.trafficEnabled);
@@ -164,13 +185,19 @@ final class GoogleMapController
       mapReadyResult.success(null);
       mapReadyResult = null;
     }
+
     setGoogleMapListener(this);
     updateMyLocationSettings();
+
     markersController.setGoogleMap(googleMap);
     polygonsController.setGoogleMap(googleMap);
     polylinesController.setGoogleMap(googleMap);
     circlesController.setGoogleMap(googleMap);
     tileOverlaysController.setGoogleMap(googleMap);
+
+    markerManger = new BMarkerManager(googleMap, markersController);
+    initClusterManager(googleMap, markerManger);
+
     updateInitialMarkers();
     updateInitialPolygons();
     updateInitialPolylines();
@@ -280,6 +307,7 @@ final class GoogleMapController
         }
       case "map#getVisibleRegion":
         {
+          clusterManager.cluster();
           if (googleMap != null) {
             LatLngBounds latLngBounds = googleMap.getProjection().getVisibleRegion().latLngBounds;
             result.success(Convert.latlngBoundsToJson(latLngBounds));
@@ -401,57 +429,39 @@ final class GoogleMapController
         result.success(null);
         break;
       }
-      case "map#updateRiderMarkers":
+      case "map#updateDynamicMarkers":
       {
         List<Object> markersToUpdate = call.argument("markers");
         List<Object> markersToChange = new ArrayList<Object>();
         List<Object> markersToAdd = new ArrayList<Object>();
+        List<Object> clusterMarkers = new ArrayList<>();
 
         long start = System.currentTimeMillis();
         for (Object marker : markersToUpdate) {
           final Map<String, ? super Object> data = (Map<String, ? super Object>) marker;
-          final Map<String, Object> extra = (Map<String, Object>) data.get("extra");
-
-          if (extra == null || extra.isEmpty()) {
-            data.put("icon", null);
-            markersToChange.add(marker);
+          final boolean clusterable = data.containsKey("clusterable") && (Boolean) data.get("clusterable");
+          if (clusterable) {
+            clusterMarkers.add(marker);
           } else {
-            Bitmap bitmap;
-            final String path = (String) extra.get("path");
-            final String name = (String) extra.get("name");
-            final int rideStatus = (int) (extra.containsKey("rideStatus") ? extra.get("rideStatus") : 0);
-            final float ratio = (float) (extra.containsKey("ratio") ? ((Double) extra.get("ratio")).floatValue() : 1.0f);
-            if (path != null) {
-              bitmap = MarkerIconPainter.getBitmapFromPath(path, density * ratio);
-            } else {
-              bitmap = MarkerIconPainter.getBitmapFromText(name, density * ratio);
-            }
-            Bitmap bitmapWithStatus;
-            switch (rideStatus) {
-              case 1:
-                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderPauseStatus, density * ratio);
-                break;
-              case 2:
-                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderLostStatus, density * ratio);
-                break;
-              case 3:
-                bitmapWithStatus = MarkerIconPainter.combineAvatarAndStatus(bitmap, riderLeftStatus, density * ratio);
-                break;
-              case 5:
-                bitmapWithStatus = MarkerIconPainter.withSos(bitmap, density * ratio);
-                break;
-              default:
-                bitmapWithStatus = bitmap;
-                break;
-            }
-            final List<Object> icon = new ArrayList<Object>();
-            icon.add((Object) "fromBitmap");
-            icon.add((Object) bitmapWithStatus);
-            data.put("icon", icon);
-            if (markersController.checkMarkerIsExist((String) data.get("markerId"))) {
+            final Map<String, Object> extra = (Map<String, Object>) data.get("extra");
+            if (extra == null || extra.isEmpty()) {
+              data.put("icon", null);
               markersToChange.add(marker);
             } else {
-              markersToAdd.add(marker);
+              final String path = (String) extra.get("path");
+              final String name = (String) extra.get("name");
+              final int rideStatus = (int) (extra.containsKey("rideStatus") ? extra.get("rideStatus") : 0);
+              final float ratio = (float) (extra.containsKey("ratio") ? ((Double) extra.get("ratio")).floatValue() : 1.0f);
+              final Bitmap bitmap = _markerIconPainter.getRiderAvatar(path, name, rideStatus, density, ratio);
+              final List<Object> icon = new ArrayList<Object>();
+              icon.add((Object) "fromBitmap");
+              icon.add((Object) bitmap);
+              data.put("icon", icon);
+              if (markersController.checkMarkerIsExist((String) data.get("markerId"))) {
+                markersToChange.add(marker);
+              } else {
+                markersToAdd.add(marker);
+              }
             }
           }
         }
@@ -460,42 +470,7 @@ final class GoogleMapController
 
         markersController.addMarkers(markersToAdd);
         markersController.changeMarkers(markersToChange);
-        result.success(null);
-        break;
-      }
-      case "map#updateClusterMarkers":
-      {
-        List<Object> markersToUpdate = call.argument("markers");
-        List<Object> markersToChange = new ArrayList<Object>();
-        List<Object> markersToAdd = new ArrayList<Object>();
-
-        long start = System.currentTimeMillis();
-        for (Object marker : markersToUpdate) {
-          final Map<String, ? super Object> data = (Map<String, ? super Object>) marker;
-          final Map<String, Object> extra = (Map<String, Object>) data.get("extra");
-
-          if (extra == null || extra.isEmpty()) {
-            data.put("icon", null);
-            markersToChange.add(marker);
-          } else {
-            final int count = (int) extra.get("count");
-            Bitmap bitmap = MarkerIconPainter.getBitmapFromCluster(count, density);
-            final List<Object> icon = new ArrayList<Object>();
-            icon.add((Object) "fromBitmap");
-            icon.add((Object) bitmap);
-            data.put("icon", icon);
-            if (markersController.checkMarkerIsExist((String) data.get("markerId"))) {
-              markersToChange.add(marker);
-            } else {
-              markersToAdd.add(marker);
-            }
-          }
-        }
-        long end = System.currentTimeMillis() - start;
-        Log.d("map#updateClusterMarkers", "execute size: " + String.valueOf(markersToUpdate.size()) + " execute time: " + String.valueOf(end) + "ms = " + String.valueOf(end / 1000) + "s");
-
-        markersController.addMarkers(markersToAdd);
-        markersController.changeMarkers(markersToChange);
+        clusterController.addOrUpdateMarkers(clusterMarkers);
         result.success(null);
         break;
       }
@@ -503,6 +478,7 @@ final class GoogleMapController
       {
         List<Object> markerIdsToRemove = call.argument("markerIds");
         markersController.removeMarkers(markerIdsToRemove);
+        clusterController.removeMarkers(markerIdsToRemove);
         result.success(null);
         break;
       }
@@ -674,6 +650,13 @@ final class GoogleMapController
           double bottom = (double) call.argument("bottom");
           double right = (double) call.argument("right");
           setPadding((float) top, (float) left, (float) bottom, (float) right);
+          result.success(null);
+          break;
+        }
+      case "map#cluster":
+        {
+          Log.d("ClusterManager", "There has " + String.valueOf(clusterManager.getMarkerCollection().getMarkers().size()) + " markers in the google map.");
+          clusterManager.cluster();
           result.success(null);
           break;
         }

@@ -64,14 +64,47 @@ static int getClusterSize(int index) {
 
 @implementation MarkerIconPainter {
     NSObject<FlutterPluginRegistrar>* _registrar;
+    UIImage* statusOfLeft;
+    UIImage* statusOfLost;
+    UIImage* statusOfPause;
 }
 
 - (instancetype)init:(NSObject<FlutterPluginRegistrar>*)registrar {
   self = [super init];
   if (self) {
     _registrar = registrar;
+    statusOfLeft = [self getUIImageFromAsset:@"common_app/assets/rider_left_png.png"];
+    statusOfLost = [self getUIImageFromAsset:@"common_app/assets/rider_disconnected_png.png"];
+    statusOfPause = [self getUIImageFromAsset:@"common_app/assets/rider_pause_png.png"];
   }
   return self;
+}
+
+- (UIImage*) getRiderAvatar:(NSString *)path name:(NSString*)name status:(int)status ratio:(NSNumber *)ratio {
+    UIImage* image;
+    if (path != nil) {
+        image = [self getUIImageFromPath:path ratio:ratio];
+    } else {
+        image = [self getUIImageFromText:name ratio:ratio];
+    }
+    
+    switch (status) {
+        case 1:
+            return [self combineAvatarAndStatus:image status:statusOfLeft];
+            break;
+        case 2:
+            return [self combineAvatarAndStatus:image status:statusOfLost];
+            break;
+        case 3:
+            return [self combineAvatarAndStatus:image status:statusOfPause];
+            break;
+        case 5:
+            return [self withSos:image ratio:ratio];
+            break;
+        default:
+            break;
+    }
+    return image;
 }
 
 - (UIImage*) getUIImageFromPath:(NSString *)path ratio:(NSNumber *)ratio {
@@ -153,7 +186,7 @@ static int getClusterSize(int index) {
     CGContextRef context = UIGraphicsGetCurrentContext();
     
     CGRect backgroundRect = CGRectMake(0, 0, iconSize, iconSize);
-    CGContextSetRGBFillColor(context, 8.0 / 2550., 27.0 / 255.0, 51.0 / 255.0, 0.7f);
+    CGContextSetRGBFillColor(context, 8.0 / 255.0, 27.0 / 255.0, 51.0 / 255.0, 0.7f);
     CGContextAddEllipseInRect(context, backgroundRect);
     CGContextSaveGState(context);
     CGContextClip(context);

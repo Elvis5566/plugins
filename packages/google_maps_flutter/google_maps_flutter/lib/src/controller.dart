@@ -328,12 +328,8 @@ class GoogleMapController {
     return _googleMapsFlutterPlatform.appendPolylinePoints(polylineId, points, mapId: mapId);
   }
 
-  Future<void> updateRiderMarkers(Set<Marker> markers) {
-    return _googleMapsFlutterPlatform.vdUpdateRiderMarkers(markers, mapId: mapId);
-  }
-
-  Future<void> updateClusterMarkers(Set<Marker> markers) {
-    return _googleMapsFlutterPlatform.vdUpdateClusterMarkers(markers, mapId: mapId);
+  Future<void> updateDynamicMarkers(Set<Marker> markers) {
+    return _googleMapsFlutterPlatform.updateDynamicMarkers(markers, mapId: mapId);
   }
 
   Future<void> removeMarkers(Set<MarkerId> markerIds) {
@@ -346,5 +342,9 @@ class GoogleMapController {
 
   Future<void> updateSelfMarker(Marker marker) {
     return _googleMapsFlutterPlatform.vdUpdateSelfMarker(marker, mapId: mapId);
+  }
+
+  Future<void> cluster() {
+    return _googleMapsFlutterPlatform.cluster(mapId: mapId);
   }
 }

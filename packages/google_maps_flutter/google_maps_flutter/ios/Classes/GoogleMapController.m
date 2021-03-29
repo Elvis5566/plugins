@@ -5,7 +5,12 @@
 #import "GoogleMapController.h"
 #import "FLTGoogleMapTileOverlayController.h"
 #import "JsonConversions.h"
+
 #import "MarkerIconPainter.h"
+#import "ClusterController.h"
+#import "ClusterRenderer.h"
+#import "BGridBasedClusterAlgorithm.h"
+#import "BClusterManager.h"
 
 #pragma mark - Conversion of JSON-like values sent via platform channels. Forward declarations.
 
@@ -64,9 +69,10 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
   FLTCirclesController* _circlesController;
   FLTTileOverlaysController* _tileOverlaysController;
   MarkerIconPainter* _markerIconPainter;
-  UIImage* riderLeftStatus;
-  UIImage* riderLostStatus;
-  UIImage* riderPauseStatus;
+  ClusterController* _clusterController;
+  GMUClusterManager* _clusterManager;
+  ClusterRenderer* _clusterRenderer;
+  BClusterManager* _bClusterManager;
   NSArray<CLLocation*> *navigationPoints;
 }
 
@@ -112,10 +118,27 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
                                                             registrar:registrar];
 
     _markerIconPainter = [[MarkerIconPainter alloc] init:registrar];
-    riderLeftStatus = [_markerIconPainter getUIImageFromAsset:@"common_app/assets/rider_left_png.png"];
-    riderLostStatus = [_markerIconPainter getUIImageFromAsset:@"common_app/assets/rider_disconnected_png.png"];
-    riderPauseStatus = [_markerIconPainter getUIImageFromAsset:@"common_app/assets/rider_pause_png.png"];
-    riderWeakSignalStatus = [_markerIconPainter getUIImageFromAsset:@"common_app/assets/rider_weak_signal_png.png"];
+    
+    // begin init ClusterManager and ClusterController
+    id<GMUClusterAlgorithm> algorithm = [[BGridBasedClusterAlgorithm alloc] initWithGridSize:50];
+    id<GMUClusterIconGenerator> iconGenerator = [[GMUDefaultClusterIconGenerator alloc] init];
+    GMUDefaultClusterRenderer* renderer = [[GMUDefaultClusterRenderer alloc] initWithMapView:_mapView clusterIconGenerator:iconGenerator];
+    _clusterRenderer = [[ClusterRenderer alloc] initWithMarkerIconPainter:_markerIconPainter];
+    renderer.delegate = _clusterRenderer;
+    renderer.animatesClusters = NO;
+    renderer.animationDuration = 0;
+    
+    _clusterManager = [[GMUClusterManager alloc] initWithMap:_mapView algorithm:algorithm renderer:renderer];
+      
+    _clusterController = [[ClusterController alloc] init:_channel
+                                                mapView:_mapView
+                                                registrar:registrar
+                                                clusterManager:_clusterManager];
+      
+    _bClusterManager = [[BClusterManager alloc] initWithClusterController:_clusterController];
+    
+    [_clusterManager setDelegate:_bClusterManager mapDelegate:self];
+    // end init ClusterManager and ClusterController
 
     id markersToAdd = args[@"markersToAdd"];
     if ([markersToAdd isKindOfClass:[NSArray class]]) {
@@ -144,55 +167,6 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
   return self;
 }
 
-- (void) setupMapForviewIdentifier: (int64_t) viewId
-                         arguments:(id _Nullable)args
-                         registrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-    _mapView.accessibilityElementsHidden = NO;
-    _trackCameraPosition = NO;
-    InterpretMapOptions(args[@"options"], self);
-    NSString* channelName =
-        [NSString stringWithFormat:@"plugins.flutter.io/google_maps_%lld", viewId];
-    _channel = [FlutterMethodChannel methodChannelWithName:channelName
-                                           binaryMessenger:registrar.messenger];
-    __weak __typeof__(self) weakSelf = self;
-    [_channel setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
-      if (weakSelf) {
-        [weakSelf onMethodCall:call result:result];
-      }
-    }];
-    _mapView.delegate = weakSelf;
-    _registrar = registrar;
-    _cameraDidInitialSetup = NO;
-    _markersController = [[FLTMarkersController alloc] init:_channel
-                                                    mapView:_mapView
-                                                  registrar:registrar];
-    _polygonsController = [[FLTPolygonsController alloc] init:_channel
-                                                      mapView:_mapView
-                                                    registrar:registrar];
-    _polylinesController = [[FLTPolylinesController alloc] init:_channel
-                                                        mapView:_mapView
-                                                      registrar:registrar];
-    _circlesController = [[FLTCirclesController alloc] init:_channel
-                                                    mapView:_mapView
-                                                  registrar:registrar];
-    [_mapView clear];
-    id markersToAdd = args[@"markersToAdd"];
-    if ([markersToAdd isKindOfClass:[NSArray class]]) {
-      [_markersController addMarkers:markersToAdd];
-    }
-    id polygonsToAdd = args[@"polygonsToAdd"];
-    if ([polygonsToAdd isKindOfClass:[NSArray class]]) {
-      [_polygonsController addPolygons:polygonsToAdd];
-    }
-    id polylinesToAdd = args[@"polylinesToAdd"];
-    if ([polylinesToAdd isKindOfClass:[NSArray class]]) {
-      [_polylinesController addPolylines:polylinesToAdd];
-    }
-    id circlesToAdd = args[@"circlesToAdd"];
-    if ([circlesToAdd isKindOfClass:[NSArray class]]) {
-      [_circlesController addCircles:circlesToAdd];
-    }
-}
 
 - (UIView*)view {
   return _mapView;
@@ -241,8 +215,6 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
         int index = [FLTGoogleMapJsonConversions toInt:call.arguments[@"index"]];
 
         if (index >= 0 && index < navigationPoints.count) {
-            NSArray<CLLocation*> *points = [FLTGoogleMapJsonConversions toPoints:call.arguments[@"points"]];
-
             id _point = call.arguments[@"point"];
             CLLocation *point = [_point isEqual:[NSNull null]] ? nil : [FLTGoogleMapJsonConversions toPoints:@[_point]].firstObject;
 
@@ -393,98 +365,55 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
         [_markersController changeMarkers:markersToChange];
       }
       result(nil);
-  } else if ([call.method isEqualToString:@"map#updateRiderMarkers"]) {
+  } else if ([call.method isEqualToString:@"map#updateDynamicMarkers"]) {
       TICK(updateRiderExecuteTime);
       id markersToUpdate = call.arguments[@"markers"];
       NSMutableArray* markersToChange = [[NSMutableArray alloc] init];
       NSMutableArray* markersToAdd = [[NSMutableArray alloc] init];
+      NSMutableArray* clusterMarkers = [[NSMutableArray alloc] init];
       
       for (NSMutableDictionary* dict in markersToUpdate) {
-          NSMutableDictionary* extra = dict[@"extra"];
-          NSString* markerId = dict[@"markerId"];
-          if ([extra count] == 0) {
-              [dict removeObjectForKey:@"icon"];
-              [markersToChange addObject:dict];
+          BOOL clusterable = [FLTGoogleMapJsonConversions toBool:dict[@"clusterable"]];
+          if (clusterable) {
+              [clusterMarkers addObject:dict];
           } else {
-              NSString* path = extra[@"path"];
-              NSString* name = extra[@"name"];
-              NSNumber* rideStatus = extra[@"rideStatus"];
-              if (!rideStatus) rideStatus = [NSNumber numberWithInt:0];
-              NSNumber* ratio = extra[@"ratio"];
-              if (!ratio) ratio = [NSNumber numberWithFloat:1.0];
-              UIImage* image;
-              if (path != nil && path != [NSNull null]) {
-                  image = [_markerIconPainter getUIImageFromPath:path ratio:ratio];
-              } else {
-                  image = [_markerIconPainter getUIImageFromText:name ratio:ratio];
-              }
-              UIImage* imageWithStatus;
-              switch (rideStatus.intValue) {
-                  case 1:
-                      imageWithStatus = [_markerIconPainter combineAvatarAndStatus:image status:riderPauseStatus];
-                      break;
-                  case 2:
-                      imageWithStatus = [_markerIconPainter combineAvatarAndStatus:image status:riderLostStatus];
-                      break;
-                  case 3:
-                      imageWithStatus = [_markerIconPainter combineAvatarAndStatus:image status:riderLeftStatus];
-                      break;
-                  case 5:
-                      imageWithStatus = [_markerIconPainter withSos:image ratio:ratio];
-                      break;
-                  default:
-                      imageWithStatus = image;
-                      break;
-              }
-              NSMutableArray* icon = [[NSMutableArray alloc] init];
-              [icon addObject:@"fromUIImage"];
-              [icon addObject:imageWithStatus];
-              [dict setValue:icon forKey:@"icon"];
-              if([_markersController checkMarkerIsExist:markerId]) {
+              NSString* markerId = dict[@"markerId"];
+              NSMutableDictionary* extra = dict[@"extra"];
+              if ([extra count] == 0) {
+                  [dict removeObjectForKey:@"icon"];
                   [markersToChange addObject:dict];
               } else {
-                  [markersToAdd addObject:dict];
+                  NSString* path = extra[@"path"];
+                  NSString* name = extra[@"name"];
+                  NSNumber* rideStatus = extra[@"rideStatus"];
+                  if (!rideStatus) rideStatus = [NSNumber numberWithInt:0];
+                  NSNumber* ratio = extra[@"ratio"];
+                  if (!ratio) ratio = [NSNumber numberWithFloat:1.0];
+                  UIImage* image = [_markerIconPainter getRiderAvatar:path name:name status:rideStatus.intValue ratio:ratio];
+                  NSMutableArray* icon = [[NSMutableArray alloc] init];
+                  [icon addObject:@"fromUIImage"];
+                  [icon addObject:image];
+                  [dict setValue:icon forKey:@"icon"];
+                  if([_markersController checkMarkerIsExist:markerId]) {
+                      [markersToChange addObject:dict];
+                  } else {
+                      [markersToAdd addObject:dict];
+                  }
               }
+              
           }
       }
       TOCK(updateRiderExecuteTime);
       [_markersController addMarkers:markersToAdd];
       [_markersController changeMarkers:markersToChange];
-      result(nil);
-  } else if ([call.method isEqualToString:@"map#updateClusterMarkers"]) {
-      TICK(updateClusterMarkersExecuteTime);
-      id markersToUpdate = call.arguments[@"markers"];
-      NSMutableArray* markersToChange = [[NSMutableArray alloc] init];
-      NSMutableArray* markersToAdd = [[NSMutableArray alloc] init];
+      [_clusterController addOrUpdateMarkers:clusterMarkers];
       
-      for (NSMutableDictionary* dict in markersToUpdate) {
-          NSMutableDictionary* extra = dict[@"extra"];
-          NSString* markerId = dict[@"markerId"];
-          if ([extra count] == 0) {
-              [dict removeObjectForKey:@"icon"];
-              [markersToChange addObject:dict];
-          } else {
-              NSNumber* count = extra[@"count"];
-              UIImage* image = [_markerIconPainter getUIImageFromCluster:count.intValue];
-              NSMutableArray* icon = [[NSMutableArray alloc] init];
-              [icon addObject:@"fromUIImage"];
-              [icon addObject:image];
-              [dict setValue:icon forKey:@"icon"];
-              if([_markersController checkMarkerIsExist:markerId]) {
-                  [markersToChange addObject:dict];
-              } else {
-                  [markersToAdd addObject:dict];
-              }
-          }
-      }
-      TOCK(updateClusterMarkersExecuteTime);
-      [_markersController addMarkers:markersToAdd];
-      [_markersController changeMarkers:markersToChange];
       result(nil);
   } else if ([call.method isEqualToString:@"map#removeMarkers"]) {
       id markerIdsToRemove = call.arguments[@"markerIds"];
       if ([markerIdsToRemove isKindOfClass:[NSArray class]]) {
         [_markersController removeMarkerIds:markerIdsToRemove];
+        [_clusterController removeMarker:markerIdsToRemove];
       }
       result(nil);
   } else if ([call.method isEqualToString:@"markers#showInfoWindow"]) {
@@ -627,6 +556,9 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
     double right = ToDouble(call.arguments[@"right"]);
     [self setPaddingTop:top left:left bottom:bottom right:right];
     result(nil);
+  } else if ([call.method isEqualToString:@"map#cluster"]) {
+    [_clusterManager cluster];
+    result(nil);
   } else {
     result(FlutterMethodNotImplemented);
   }
@@ -648,7 +580,7 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
     }
 
     delayNotifingAnimationCompletedTask = dispatch_block_create(0, ^{
-        [_channel invokeMethod:@"camera#animationCompleted" arguments:@{}];
+        [self->_channel invokeMethod:@"camera#animationCompleted" arguments:@{}];
         delayNotifingAnimationCompletedTask = nil;
     });
 

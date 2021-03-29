@@ -443,6 +443,32 @@ class Convert {
     }
   }
 
+  public static BClusterItem toClusterItem(Object o) {
+    final Map<?, ?> data = toMap(o);
+
+    final String markerId = (String) data.get("markerId");
+    if (markerId == null) {
+      throw new IllegalArgumentException("markerId was null");
+    } else {
+      final Map<?, ?> extra = data.containsKey("extra") ? toMap(data.get("extra")) : new HashMap<>();
+      final Object position = data.get("position");
+      final String path = (String) (extra.containsKey("path") ? extra.get("path") : "");
+      final String name = (String) (extra.containsKey("name") ? extra.get("name") : "");
+      final int status = (int) (extra.containsKey("rideStatus") ? extra.get("rideStatus") : 0);
+      final float ratio = (float) (extra.containsKey("ratio") ? ((Double) extra.get("ratio")).floatValue() : 1.0f);
+      final float zIndex = (float) (data.containsKey("zIndex") ?  ((Double) data.get("zIndex")).floatValue()  : 0.0f);
+      final Object anchor = data.get("anchor");
+      float u = 0.0f, v = 0.0f;
+      if (anchor != null) {
+        final List<?> anchorData = toList(anchor);
+        u = toFloat(anchorData.get(0));
+        v = toFloat(anchorData.get(1));
+      }
+
+      return new BClusterItem(markerId, toLatLng(position), name, path, status, ratio, u, v, zIndex);
+    }
+  }
+
   private static void interpretInfoWindowOptions(
       MarkerOptionsSink sink, Map<String, Object> infoWindow) {
     String title = (String) infoWindow.get("title");

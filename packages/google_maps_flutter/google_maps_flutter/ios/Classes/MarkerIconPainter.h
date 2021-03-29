@@ -10,6 +10,7 @@
 
 @interface MarkerIconPainter : NSObject
 - (instancetype)init:(NSObject<FlutterPluginRegistrar>*)registrar;
+- (UIImage*) getRiderAvatar:(NSString *)path name:(NSString*)name status:(int)status ratio:(NSNumber *)ratio;
 - (UIImage*) getUIImageFromPath:(NSString*)path ratio:(NSNumber*)ratio;
 - (UIImage*) getUIImageFromAsset:(NSString*)assetName;
 - (UIImage*) getUIImageFromText:(NSString*)text ratio:(NSNumber*)ratio;

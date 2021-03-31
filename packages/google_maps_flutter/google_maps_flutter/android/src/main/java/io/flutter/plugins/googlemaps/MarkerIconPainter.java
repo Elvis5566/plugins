@@ -6,6 +6,7 @@ import android.graphics.PorterDuff.Mode;
 import android.os.Environment;
 import android.util.Log;
 import android.content.res.AssetManager;
+import android.util.LruCache;
 
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
@@ -27,11 +28,20 @@ class MarkerIconPainter {
     private Bitmap riderLostStatus;
     private Bitmap riderPauseStatus;
 
+    private final LruCache<String, Bitmap> bitmapLruCache;
+
     MarkerIconPainter(AssetManager mgr, float density) {
         this.mgr = mgr;
         this.riderLeftStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_left_png.png", density);;
         this.riderLostStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_disconnected_png.png", density);
         this.riderPauseStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_pause_png.png", density);
+        int cacheSize = 4 * 1024 * 1024;
+        this.bitmapLruCache = new LruCache<String, Bitmap>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Bitmap value) {
+                return value.getByteCount();
+            }
+        };
     }
 
 
@@ -140,6 +150,11 @@ class MarkerIconPainter {
     }
 
     public Bitmap getBitmapFromCluster(int index, float density) {
+        final String key = "cluster-" + String.valueOf(index);
+        if (bitmapLruCache.get(key) != null) {
+            return bitmapLruCache.get(key);
+        }
+
         int iconSize = (int) Math.ceil(getClusterSize(index) * density);
         final String text = (index >= 10) ? String.valueOf(index) + "+" : String.valueOf(index);
         final int fontSize = (index >= 100) ? 18 : 16;
@@ -164,6 +179,13 @@ class MarkerIconPainter {
         textPaint.setTypeface(typeface);
         float y = iconSize / 2f + textBoxRect.height() / 2f - textBoxRect.bottom;
         canvas.drawText(text, rectF.centerX(), y, textPaint);
+
+        synchronized (bitmapLruCache) {
+            if (bitmapLruCache.get(key) == null) {
+                bitmapLruCache.put(key, output);
+            }
+        }
+
         return output;
     }
 

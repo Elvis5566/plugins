@@ -1,6 +1,9 @@
 package io.flutter.plugins.googlemaps;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 

@@ -58,13 +58,13 @@ class MarkerIconPainter {
 
         switch (status) {
             case 1:
-                bitmapWithStatus = combineAvatarAndStatus(bitmap, riderLeftStatus, density);
+                bitmapWithStatus = combineAvatarAndStatus(bitmap, riderPauseStatus, density);
                 break;
             case 2:
                 bitmapWithStatus = combineAvatarAndStatus(bitmap, riderLostStatus, density);
                 break;
             case 3:
-                bitmapWithStatus = combineAvatarAndStatus(bitmap, riderPauseStatus, density);
+                bitmapWithStatus = combineAvatarAndStatus(bitmap, riderLeftStatus, density);
                 break;
             case 5:
                 bitmapWithStatus = withSos(bitmap, density * ratio);

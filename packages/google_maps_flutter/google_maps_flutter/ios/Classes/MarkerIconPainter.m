@@ -90,13 +90,13 @@ static int getClusterSize(int index) {
     
     switch (status) {
         case 1:
-            return [self combineAvatarAndStatus:image status:statusOfLeft];
+            return [self combineAvatarAndStatus:image status:statusOfPause];
             break;
         case 2:
             return [self combineAvatarAndStatus:image status:statusOfLost];
             break;
         case 3:
-            return [self combineAvatarAndStatus:image status:statusOfPause];
+            return [self combineAvatarAndStatus:image status:statusOfLeft];
             break;
         case 5:
             return [self withSos:image ratio:ratio];

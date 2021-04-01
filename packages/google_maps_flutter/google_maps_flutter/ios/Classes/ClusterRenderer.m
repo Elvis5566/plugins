@@ -35,6 +35,7 @@
         id<GMUCluster> userData = marker.userData;
         int count = (int)userData.count;
         marker.icon = [_markerIconPainter getUIImageFromCluster: count > 10 ? _buckets[[self bucketIndexForSize:count]].intValue : count];
+        marker.zIndex = 700;
     } else if ([marker.userData conformsToProtocol:@protocol(GMUClusterItem)]) {
         BClusterItem* typedData = (BClusterItem*)marker.userData;
         marker.position = typedData.position;

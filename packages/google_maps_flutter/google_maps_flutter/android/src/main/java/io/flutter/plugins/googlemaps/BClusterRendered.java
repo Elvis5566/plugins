@@ -56,6 +56,7 @@ public class BClusterRendered extends DefaultClusterRenderer<BClusterItem> {
         super.onBeforeClusterRendered(cluster, markerOptions);
         clusterIconGenerator.setBackground(null);
         markerOptions.icon(clusterIcon(cluster));
+        markerOptions.zIndex(700);
     }
 
     @Override

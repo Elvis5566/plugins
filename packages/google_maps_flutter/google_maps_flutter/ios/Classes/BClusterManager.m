@@ -20,6 +20,7 @@
 }
 
 - (BOOL)clusterManager:(GMUClusterManager *)clusterManager didTapCluster:(id<GMUCluster>)cluster {
+    [_controller moveCamera:cluster.position level:1.0f];
     return YES;
 }
 

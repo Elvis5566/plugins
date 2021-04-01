@@ -22,6 +22,7 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.CancelableCallback;
 import com.google.android.gms.maps.GoogleMap.SnapshotReadyCallback;
@@ -36,6 +37,7 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
 import com.google.maps.android.collections.MarkerManager;
@@ -157,17 +159,26 @@ final class GoogleMapController
 
   private void initClusterManager(final GoogleMap googleMap, final BMarkerManager markerManger) {
     clusterManager = new ClusterManager<>(context, googleMap, markerManger);
-    final BClusterRendered rendered = new BClusterRendered(context, googleMap, clusterManager, _markerIconPainter);
-    rendered.setDensity(density);
+    final BClusterRendered renderer = new BClusterRendered(context, googleMap, clusterManager, _markerIconPainter);
+    renderer.setDensity(density);
+    renderer.setMinClusterSize(10);
     final GridBasedAlgorithm algorithm = new  GridBasedAlgorithm();
-    algorithm.setMaxDistanceBetweenClusteredItems(25);
+    algorithm.setMaxDistanceBetweenClusteredItems(50);
     clusterManager.setAlgorithm(algorithm);
-    clusterManager.setRenderer(rendered);
+    clusterManager.setRenderer(renderer);
     clusterManager.setAnimation(false);
     clusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<BClusterItem>() {
       @Override
       public boolean onClusterItemClick(BClusterItem item) {
         clusterController.onClusterItemClick(item);
+        return true;
+      }
+    });
+    clusterManager.setOnClusterClickListener(new ClusterManager.OnClusterClickListener<BClusterItem>() {
+      @Override
+      public boolean onClusterClick(Cluster<BClusterItem> cluster) {
+        final float zoom = googleMap.getCameraPosition().zoom + 1.0f;
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(cluster.getPosition(), zoom), 500, null);
         return true;
       }
     });

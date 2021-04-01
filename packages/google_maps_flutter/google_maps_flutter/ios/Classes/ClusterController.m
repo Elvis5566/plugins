@@ -100,6 +100,11 @@
     return _clusterItems[markerId] != nil;
 }
 
+- (void) moveCamera:(CLLocationCoordinate2D)position level:(float) level {
+    float zoom = _mapView.camera.zoom + level;
+    [_mapView animateWithCameraUpdate:[GMSCameraUpdate setTarget:position zoom:zoom]];
+}
+
 - (void) removeClusterItemFromClusterManager:(NSString* )markerId {
     BClusterItem* item = _clusterItems[markerId];
     if (item) {

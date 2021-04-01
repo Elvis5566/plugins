@@ -43,6 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeMarker:(NSArray*)markerIds;
 - (BOOL)onMarkerTap:(NSString*)markerId;
 - (BOOL)checkMarkerIsExist:(NSString*)markerId;
+- (void)moveCamera:(CLLocationCoordinate2D)position level:(float) level;
 
 @end
 

@@ -82,7 +82,7 @@ static int getClusterSize(int index) {
 
 - (UIImage*) getRiderAvatar:(NSString *)path name:(NSString*)name status:(int)status ratio:(NSNumber *)ratio {
     UIImage* image;
-    if (path != nil) {
+    if (path != nil && path != [NSNull null]) {
         image = [self getUIImageFromPath:path ratio:ratio];
     } else {
         image = [self getUIImageFromText:name ratio:ratio];

@@ -160,7 +160,7 @@ final class GoogleMapController
     final BClusterRendered rendered = new BClusterRendered(context, googleMap, clusterManager, _markerIconPainter);
     rendered.setDensity(density);
     final GridBasedAlgorithm algorithm = new  GridBasedAlgorithm();
-    algorithm.setMaxDistanceBetweenClusteredItems(50);
+    algorithm.setMaxDistanceBetweenClusteredItems(25);
     clusterManager.setAlgorithm(algorithm);
     clusterManager.setRenderer(rendered);
     clusterManager.setAnimation(false);

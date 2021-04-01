@@ -120,7 +120,7 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
     _markerIconPainter = [[MarkerIconPainter alloc] init:registrar];
     
     // begin init ClusterManager and ClusterController
-    id<GMUClusterAlgorithm> algorithm = [[BGridBasedClusterAlgorithm alloc] initWithGridSize:50];
+    id<GMUClusterAlgorithm> algorithm = [[BGridBasedClusterAlgorithm alloc] initWithGridSize:25];
     id<GMUClusterIconGenerator> iconGenerator = [[GMUDefaultClusterIconGenerator alloc] init];
     GMUDefaultClusterRenderer* renderer = [[GMUDefaultClusterRenderer alloc] initWithMapView:_mapView clusterIconGenerator:iconGenerator];
     _clusterRenderer = [[ClusterRenderer alloc] initWithMarkerIconPainter:_markerIconPainter];

@@ -48,17 +48,15 @@ static UIImage* toAvatar(UIImage* image, NSNumber* ratio) {
 
 static int getClusterSize(int index) {
     if (index >= 1000) {
-        return 60;
+        return 80;
     } else if (index >= 500 && index < 1000) {
-        return 56;
-    } else if (index >= 200 && index < 500) {
-        return 52;
-    } else if (index >= 100 && index < 200) {
-        return 48;
+        return 72;
+    } else if (index >= 100 && index < 500) {
+        return 64;
     } else if (index >= 50 && index < 100) {
-        return 44;
+        return 56;
     } else {
-        return 40;
+        return 48;
     }
 }
 

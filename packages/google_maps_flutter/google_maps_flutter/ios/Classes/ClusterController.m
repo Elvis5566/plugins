@@ -35,6 +35,22 @@
 
 @synthesize position;
 
+- (NSUInteger) hash {
+    return _markerId.hash;
+}
+
+- (BOOL)isEqual:(id)other {
+    if (other == self) {
+        return YES;
+    }
+    
+    if (![other isKindOfClass:[BClusterItem class]]) {
+        return NO;
+    }
+
+    return [self.markerId isEqualToString:((BClusterItem*) other).markerId];
+}
+
 @end
 
 @implementation ClusterController {
@@ -78,8 +94,8 @@
         if (!markerId) {
             continue;
         }
-        [_clusterItems removeObjectForKey:markerId];
         [self removeClusterItemFromClusterManager:markerId];
+        [_clusterItems removeObjectForKey:markerId];
     }
 }
 

@@ -372,14 +372,22 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
       NSMutableArray* markersToChange = [[NSMutableArray alloc] init];
       NSMutableArray* markersToAdd = [[NSMutableArray alloc] init];
       NSMutableArray* clusterMarkers = [[NSMutableArray alloc] init];
+      NSMutableArray* removeFromCluster = [[NSMutableArray alloc] init];
+      NSMutableArray* removeFromMarkerManager = [[NSMutableArray alloc] init];
       
       for (NSMutableDictionary* dict in markersToUpdate) {
           BOOL clusterable = [FLTGoogleMapJsonConversions toBool:dict[@"clusterable"]];
+          NSString* markerId = dict[@"markerId"];
           if (clusterable) {
               [clusterMarkers addObject:dict];
+              if ([_markersController checkMarkerIsExist:markerId]) {
+                  [removeFromMarkerManager addObject:markerId];
+              }
           } else {
-              NSString* markerId = dict[@"markerId"];
               NSMutableDictionary* extra = dict[@"extra"];
+              if ([_clusterController checkMarkerIsExist:markerId]) {
+                  [removeFromCluster addObject:markerId];
+              }
               if ([extra count] == 0) {
                   [dict removeObjectForKey:@"icon"];
                   [markersToChange addObject:dict];
@@ -408,6 +416,8 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
       [_markersController addMarkers:markersToAdd];
       [_markersController changeMarkers:markersToChange];
       [_clusterController addOrUpdateMarkers:clusterMarkers];
+      [_markersController removeMarkerIds:removeFromMarkerManager];
+      [_clusterController removeMarker:removeFromCluster];
       
       result(nil);
   } else if ([call.method isEqualToString:@"map#removeMarkers"]) {

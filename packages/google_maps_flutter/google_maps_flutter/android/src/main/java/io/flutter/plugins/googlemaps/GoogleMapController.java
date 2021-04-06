@@ -446,15 +446,24 @@ final class GoogleMapController
         List<Object> markersToChange = new ArrayList<Object>();
         List<Object> markersToAdd = new ArrayList<Object>();
         List<Object> clusterMarkers = new ArrayList<>();
+        List<Object> removeFromCluster = new ArrayList<>();
+        List<Object> removeFromMarkerManager = new ArrayList<>();
 
         long start = System.currentTimeMillis();
         for (Object marker : markersToUpdate) {
           final Map<String, ? super Object> data = (Map<String, ? super Object>) marker;
           final boolean clusterable = data.containsKey("clusterable") && (Boolean) data.get("clusterable");
+          final String markerId = (String) data.get("markerId");
           if (clusterable) {
             clusterMarkers.add(marker);
+            if (markersController.checkMarkerIsExist(markerId)) {
+              removeFromMarkerManager.add(markerId);
+            }
           } else {
             final Map<String, Object> extra = (Map<String, Object>) data.get("extra");
+            if (clusterController.checkMarkerIsExist(markerId)) {
+              removeFromCluster.add(markerId);
+            }
             if (extra == null || extra.isEmpty()) {
               data.put("icon", null);
               markersToChange.add(marker);
@@ -468,7 +477,7 @@ final class GoogleMapController
               icon.add((Object) "fromBitmap");
               icon.add((Object) bitmap);
               data.put("icon", icon);
-              if (markersController.checkMarkerIsExist((String) data.get("markerId"))) {
+              if (markersController.checkMarkerIsExist(markerId)) {
                 markersToChange.add(marker);
               } else {
                 markersToAdd.add(marker);
@@ -482,6 +491,8 @@ final class GoogleMapController
         markersController.addMarkers(markersToAdd);
         markersController.changeMarkers(markersToChange);
         clusterController.addOrUpdateMarkers(clusterMarkers);
+        markersController.removeMarkers(removeFromMarkerManager);
+        clusterController.removeMarkers(removeFromCluster);
         result.success(null);
         break;
       }

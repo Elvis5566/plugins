@@ -9,6 +9,8 @@
 #import <GoogleMaps/GoogleMaps.h>
 
 @interface MarkerIconPainter : NSObject
+@property(atomic) UIColor* clusterBackgroundColor;
+@property(atomic) UIColor* clusterFontColor;
 - (instancetype)init:(NSObject<FlutterPluginRegistrar>*)registrar;
 - (UIImage*) getRiderAvatar:(NSString *)path name:(NSString*)name status:(int)status ratio:(NSNumber *)ratio;
 - (UIImage*) getUIImageFromPath:(NSString*)path ratio:(NSNumber*)ratio;

@@ -677,8 +677,24 @@ final class GoogleMapController
         }
       case "map#cluster":
         {
-          Log.d("ClusterManager", "There has " + String.valueOf(clusterManager.getMarkerCollection().getMarkers().size()) + " markers in the google map.");
           clusterManager.cluster();
+          result.success(null);
+          break;
+        }
+      case "map#setClusterMarkerStyle":
+        {
+          Map<String, Object> background = call.argument("background");
+          Map<String, Object> font = call.argument("font");
+          final int ba = (int) (background.containsKey("a") ? background.get("a") : 153);
+          final int br = (int) (background.containsKey("r") ? background.get("r") : 8);
+          final int bg = (int) (background.containsKey("g") ? background.get("g") : 27);
+          final int bb = (int) (background.containsKey("b") ? background.get("b") : 51);
+          final int fr = (int) (font.containsKey("r") ? font.get("r") : 255);
+          final int fg = (int) (font.containsKey("g") ? font.get("g") : 255);
+          final int fb = (int) (font.containsKey("b") ? font.get("b") : 255);
+          final int fa = (int) (font.containsKey("a") ? font.get("a") : 255);
+          _markerIconPainter.setClusterBackgroundColor(br, bg, bb, (float)(ba / 255.0f));
+          _markerIconPainter.setClusterFontColor(fr, fg, fb, (float)(fa / 255.0f));
           result.success(null);
           break;
         }

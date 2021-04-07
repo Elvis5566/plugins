@@ -347,4 +347,8 @@ class GoogleMapController {
   Future<void> cluster() {
     return _googleMapsFlutterPlatform.cluster(mapId: mapId);
   }
+
+  Future<void> setClusterMarkerStyle(Color background, Color font) {
+    return _googleMapsFlutterPlatform.setClusterMarkerStyle(background, font, mapId: mapId);
+  }
 }

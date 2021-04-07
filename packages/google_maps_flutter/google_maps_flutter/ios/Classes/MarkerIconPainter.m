@@ -182,9 +182,10 @@ static int getClusterSize(int index) {
     
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(iconSize, iconSize), NO, 0.0);
     CGContextRef context = UIGraphicsGetCurrentContext();
-    
+    CGFloat red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
+    [_clusterBackgroundColor getRed:&red green:&green blue:&blue alpha:&alpha];
     CGRect backgroundRect = CGRectMake(0, 0, iconSize, iconSize);
-    CGContextSetRGBFillColor(context, 8.0 / 255.0, 27.0 / 255.0, 51.0 / 255.0, 0.7f);
+    CGContextSetRGBFillColor(context, red, green, blue, alpha);
     CGContextAddEllipseInRect(context, backgroundRect);
     CGContextSaveGState(context);
     CGContextClip(context);
@@ -194,7 +195,7 @@ static int getClusterSize(int index) {
     UIFont* font = [UIFont boldSystemFontOfSize:18.0];
     NSDictionary* attr = @{
         NSFontAttributeName: font,
-        NSForegroundColorAttributeName: UIColor.whiteColor,
+        NSForegroundColorAttributeName: _clusterFontColor,
     };
     CGSize textSize = [text sizeWithAttributes:attr];
     CGRect textRect = CGRectMake(0 + floorf((iconSize - textSize.width) / 2), 0 + floorf((iconSize - textSize.height) / 2), textSize.width, textSize.height);

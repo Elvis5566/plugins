@@ -407,4 +407,8 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
   Future<void> cluster({@required int mapId}) {
     throw UnimplementedError("cluster has not been implemented.");
   }
+
+  Future<void> setClusterMarkerStyle(Color background, Color font, {@required int mapId}) {
+    throw UnimplementedError("setClusterMarkerStyle has not been implemented.");
+  }
 }

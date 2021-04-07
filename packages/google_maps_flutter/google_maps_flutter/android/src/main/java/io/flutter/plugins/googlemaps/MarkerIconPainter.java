@@ -29,6 +29,10 @@ class MarkerIconPainter {
     private Bitmap riderPauseStatus;
 
     private final LruCache<String, Bitmap> bitmapLruCache;
+    private int clusterBackgroundColor = Color.rgb(8, 27, 51);
+    private int clusterFontColor = Color.rgb(255, 255, 255);
+    private float clusterBackgroundAlpha = 0.6f;
+    private float clusterFontAlpha = 1.0f;
 
     MarkerIconPainter(AssetManager mgr, float density) {
         this.mgr = mgr;
@@ -44,7 +48,15 @@ class MarkerIconPainter {
         };
     }
 
+    public void setClusterBackgroundColor(int r, int g, int b, float a) {
+        this.clusterBackgroundColor = Color.rgb(r, g, b);
+        this.clusterBackgroundAlpha = a;
+    }
 
+    public void setClusterFontColor(int r, int g, int b, float a) {
+        this.clusterFontColor = Color.rgb(r, g, b);
+        this.clusterFontAlpha = a;
+    }
 
     public Bitmap getRiderAvatar(String path, String name, int status, float density, float ratio) {
         Bitmap bitmap;
@@ -150,7 +162,7 @@ class MarkerIconPainter {
     }
 
     public Bitmap getBitmapFromCluster(int index, float density) {
-        final String key = "cluster-" + String.valueOf(index);
+        final String key = "cluster-" + String.valueOf(index) + "background" + String.valueOf(clusterBackgroundColor) + String.valueOf(clusterBackgroundAlpha) + "font" + String.valueOf(clusterFontColor) + String.valueOf(clusterFontAlpha);
         if (bitmapLruCache.get(key) != null) {
             return bitmapLruCache.get(key);
         }
@@ -165,14 +177,15 @@ class MarkerIconPainter {
         RectF rectF = new RectF(new Rect(0, 0, iconSize, iconSize));
         Paint clipOvalPaint = new Paint();
         clipOvalPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-        clipOvalPaint.setColor(Color.parseColor("#081B33"));
-        clipOvalPaint.setAlpha(153);
+        clipOvalPaint.setColor(clusterBackgroundColor);
+        clipOvalPaint.setAlpha((int) (255.0 * clusterBackgroundAlpha));
         canvas.drawRoundRect(rectF, iconSize, iconSize, clipOvalPaint);
 
         final Rect textBoxRect = new Rect();
         Paint textPaint = new Paint();
         final Typeface typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD);
-        textPaint.setColor(Color.WHITE);
+        textPaint.setColor(clusterFontColor);
+        textPaint.setAlpha((int) (255.0 * clusterFontAlpha));
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(fontSize * density);
         textPaint.getTextBounds(text, 0, text.length(), textBoxRect);

@@ -570,6 +570,34 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
   } else if ([call.method isEqualToString:@"map#cluster"]) {
     [_clusterManager cluster];
     result(nil);
+  } else if ([call.method isEqualToString:@"map#setClusterMarkerStyle"]) {
+      NSDictionary* background = call.arguments[@"background"];
+      NSDictionary* font = call.arguments[@"font"];
+      NSNumber* br = background[@"r"];
+      NSNumber* bg = background[@"g"];
+      NSNumber* bb = background[@"b"];
+      NSNumber* ba = background[@"a"];
+      if (!br) br = [NSNumber numberWithInt:8];
+      if (!bg) bg = [NSNumber numberWithInt:27];
+      if (!bb) bb = [NSNumber numberWithInt:51];
+      if (!ba) ba = [NSNumber numberWithInt:153];
+      NSNumber* fr = font[@"r"];
+      NSNumber* fg = font[@"g"];
+      NSNumber* fb = font[@"b"];
+      NSNumber* fa = font[@"a"];
+      if (!fr) fr = [NSNumber numberWithInt:255];
+      if (!fg) fg = [NSNumber numberWithInt:255];
+      if (!fb) fb = [NSNumber numberWithInt:255];
+      if (!fa) fa = [NSNumber numberWithInt:255.0];
+      _markerIconPainter.clusterBackgroundColor = [UIColor colorWithRed:br.intValue/255.0f
+                                                                  green:bg.intValue/255.0f
+                                                                   blue:bb.intValue/255.0f
+                                                                  alpha:ba.intValue/255.0f];
+      _markerIconPainter.clusterFontColor = [UIColor colorWithRed:fr.intValue/255.0f
+                                                            green:fg.intValue/255.0f
+                                                             blue:fb.intValue/255.0f
+                                                            alpha:fa.intValue/255.0f];
+      result(nil);
   } else {
     result(FlutterMethodNotImplemented);
   }

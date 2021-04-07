@@ -665,4 +665,21 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
   Future<void> cluster({@required int mapId}) {
     return channel(mapId).invokeMethod<void>("map#cluster");
   }
+
+  Future<void> setClusterMarkerStyle(Color background, Color font, {@required int mapId}) {
+    return channel(mapId).invokeMethod<void>('map#setClusterMarkerStyle', {
+      'background': {
+        'a': background.alpha,
+        'r': background.red,
+        'g': background.green,
+        'b': background.blue,
+      },
+      'font': {
+        'r': font.red,
+        'g': font.green,
+        'b': font.blue,
+        'a': font.alpha,
+      }
+    });
+  }
 }

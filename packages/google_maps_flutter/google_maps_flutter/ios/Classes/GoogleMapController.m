@@ -199,6 +199,7 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
     if ([call.method isEqualToString:@"map#initNavigationPolyline"]) {
         navigationPoints = [FLTGoogleMapJsonConversions toPoints:call.arguments[@"points"]];
 
+        [_polylinesController removePolylineIds:@[@"remainingPolyline"]];
         [_polylinesController addPolylines:@[call.arguments[@"skippedPolyline"], call.arguments[@"remainingPolyline"]]];
 
         FLTGoogleMapPolylineController *controller = [_polylinesController getGoogleMapPolylineController: @"remainingPolyline"];

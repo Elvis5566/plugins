@@ -230,6 +230,10 @@ final class GoogleMapController
       case "map#initNavigationPolyline": {
         navigationPoints = Convert.toPoints(call.argument("points"));
 
+        List<Object> removedPolylines = new ArrayList<>();
+        removedPolylines.add("remainingPolyline");
+        polylinesController.removePolylines(removedPolylines);
+
         List<Object> polylines = new ArrayList<>();
         polylines.add(call.argument("skippedPolyline"));
         polylines.add(call.argument("remainingPolyline"));

@@ -784,6 +784,10 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
   [_channel invokeMethod:@"map#onLongPress" arguments:@{@"position" : LocationToJson(coordinate)}];
 }
 
+- (void)mapView:(GMSMapView *)mapView didTapPOIWithPlaceID:(NSString *)placeID name:(NSString *)name location:(CLLocationCoordinate2D)location {
+  [_channel invokeMethod:@"map#onTap" arguments:@{@"position" : LocationToJson(location)}];
+}
+
 @end
 
 #pragma mark - Implementations of JSON conversion functions.

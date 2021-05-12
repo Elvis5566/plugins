@@ -476,7 +476,8 @@ final class GoogleMapController
               final String name = (String) extra.get("name");
               final int rideStatus = (int) (extra.containsKey("rideStatus") ? extra.get("rideStatus") : 0);
               final float ratio = (float) (extra.containsKey("ratio") ? ((Double) extra.get("ratio")).floatValue() : 1.0f);
-              final Bitmap bitmap = _markerIconPainter.getRiderAvatar(path, name, rideStatus, density, ratio);
+              final boolean highlight = (boolean) (extra.containsKey("highlight") ? extra.get("highlight") : false);
+              final Bitmap bitmap = _markerIconPainter.getRiderAvatar(path, name, rideStatus, density, ratio, highlight);
               final List<Object> icon = new ArrayList<Object>();
               icon.add((Object) "fromBitmap");
               icon.add((Object) bitmap);

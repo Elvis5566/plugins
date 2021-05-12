@@ -41,7 +41,7 @@
         marker.position = typedData.position;
         marker.draggable = typedData.draggable;
         marker.flat = typedData.flat;
-        marker.icon = [_markerIconPainter getRiderAvatar:typedData.path name:typedData.name status:typedData.status ratio:typedData.ratio];
+        marker.icon = [_markerIconPainter getRiderAvatar:typedData.path name:typedData.name status:typedData.status ratio:typedData.ratio highlight:NO];
         marker.opacity = typedData.alpha;
         marker.groundAnchor = typedData.anchor;
         marker.rotation = typedData.rotation;

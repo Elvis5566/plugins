@@ -78,7 +78,7 @@ static int getClusterSize(int index) {
   return self;
 }
 
-- (UIImage*) getRiderAvatar:(NSString *)path name:(NSString*)name status:(int)status ratio:(NSNumber *)ratio {
+- (UIImage*) getRiderAvatar:(NSString *)path name:(NSString*)name status:(int)status ratio:(NSNumber *)ratio highlight:(BOOL)highlight {
     UIImage* image;
     if (path != nil && path != [NSNull null]) {
         image = [self getUIImageFromPath:path ratio:ratio];
@@ -88,21 +88,32 @@ static int getClusterSize(int index) {
     
     switch (status) {
         case 1:
-            return [self combineAvatarAndStatus:image status:statusOfPause];
-            break;
+            if (highlight) {
+                return [self withHighlight:[self combineAvatarAndStatus:image status:statusOfPause] ratio:ratio hasPadding:YES];
+            } else {
+                return [self combineAvatarAndStatus:image status:statusOfPause];
+            }
         case 2:
-            return [self combineAvatarAndStatus:image status:statusOfLost];
-            break;
+            if (highlight) {
+                return [self withHighlight:[self combineAvatarAndStatus:image status:statusOfLost] ratio:ratio hasPadding:YES];
+            } else {
+                return [self combineAvatarAndStatus:image status:statusOfLost];
+            }
         case 3:
-            return [self combineAvatarAndStatus:image status:statusOfLeft];
-            break;
+            if (highlight) {
+                return [self withHighlight:[self combineAvatarAndStatus:image status:statusOfLeft] ratio:ratio hasPadding:YES];
+            } else {
+                return [self combineAvatarAndStatus:image status:statusOfLeft];
+            }
         case 5:
             return [self withSos:image ratio:ratio];
-            break;
         default:
-            break;
+            if (highlight) {
+                return [self withHighlight:image ratio:ratio  hasPadding:NO];
+            } else {
+                return image;
+            }
     }
-    return image;
 }
 
 - (UIImage*) getUIImageFromPath:(NSString *)path ratio:(NSNumber *)ratio {
@@ -244,4 +255,46 @@ static int getClusterSize(int index) {
     return view;
 }
 
+- (UIImage*) withHighlight:(UIImage *)avatar ratio:(NSNumber *)ratio hasPadding:(BOOL)hasPadding {
+    float shadowSize = 6 * ratio.floatValue;
+    float paddingSize = 2 * ratio.floatValue;
+    float iconSize = avatar.size.width + shadowSize * 2 + paddingSize * 2;
+    float offset = 0;
+    if (hasPadding) {
+        offset = 2;
+    }
+    CGPoint center = CGPointMake(iconSize / 2 - offset, iconSize / 2 + offset);
+    float radius = iconSize / 2;
+    CGRect ellipseRect = CGRectMake(0, 0, iconSize, iconSize);
+
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(iconSize, iconSize), NO, 0.0);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+
+    CGFloat colors[] = {
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.08,
+        0.0, 1.0, 0.0, 0.16,
+        0.0, 1.0, 0.0, 0.24,
+        0.0, 1.0, 0.0, 0.32,
+        0.0, 1.0, 0.0, 0.40,
+        0.0, 1.0, 0.0, 0.48,
+        0.0, 1.0, 0.0, 0.56,
+        0.0, 1.0, 0.0, 0.62,
+        0.0, 1.0, 0.0, 0.68,
+        0.0, 1.0, 0.0, 0.74,
+    };
+    CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
+    CGGradientRef gradientref = CGGradientCreateWithColorComponents(colorSpaceRef, colors, NULL, 11);
+    CGContextAddEllipseInRect(context, ellipseRect);
+    CGContextClip(context);
+
+    CGContextDrawRadialGradient(context, gradientref, center, radius, center, radius - shadowSize, kCGGradientDrawsAfterEndLocation);
+
+    [avatar drawInRect:CGRectMake(shadowSize + paddingSize, shadowSize + paddingSize, avatar.size.width, avatar.size.height)];
+
+    UIImage* view = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+
+    return view;
+}
 @end

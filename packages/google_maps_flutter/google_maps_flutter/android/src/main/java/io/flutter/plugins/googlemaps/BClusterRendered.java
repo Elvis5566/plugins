@@ -36,7 +36,7 @@ public class BClusterRendered extends DefaultClusterRenderer<BClusterItem> {
     @Override
     protected void onBeforeClusterItemRendered(@NonNull BClusterItem item, @NonNull MarkerOptions markerOptions) {
         super.onBeforeClusterItemRendered(item, markerOptions);
-        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(markerIconPainter.getRiderAvatar(item.getPath(), item.getTitle(), item.getStatus(), density, item.getRatio())));
+        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(markerIconPainter.getRiderAvatar(item.getPath(), item.getTitle(), item.getStatus(), density, item.getRatio(), false)));
         markerOptions.title(item.getTitle());
         markerOptions.anchor(item.getAnchorU(), item.getAnchorV());
         markerOptions.zIndex(item.getZIndex());
@@ -45,7 +45,7 @@ public class BClusterRendered extends DefaultClusterRenderer<BClusterItem> {
     @Override
     protected void onClusterItemUpdated(@NonNull BClusterItem item, @NonNull Marker marker) {
         super.onClusterItemUpdated(item, marker);
-        marker.setIcon(BitmapDescriptorFactory.fromBitmap(markerIconPainter.getRiderAvatar(item.getPath(), item.getTitle(), item.getStatus(), density, item.getRatio())));
+        marker.setIcon(BitmapDescriptorFactory.fromBitmap(markerIconPainter.getRiderAvatar(item.getPath(), item.getTitle(), item.getStatus(), density, item.getRatio(), false)));
         marker.setTitle(item.getTitle());
         marker.setAnchor(item.getAnchorU(), item.getAnchorV());
         marker.setZIndex(item.getZIndex());

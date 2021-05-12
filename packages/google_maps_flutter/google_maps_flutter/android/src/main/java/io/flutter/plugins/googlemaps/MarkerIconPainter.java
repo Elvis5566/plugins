@@ -36,7 +36,8 @@ class MarkerIconPainter {
 
     MarkerIconPainter(AssetManager mgr, float density) {
         this.mgr = mgr;
-        this.riderLeftStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_left_png.png", density);;
+        this.riderLeftStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_left_png.png", density);
+        ;
         this.riderLostStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_disconnected_png.png", density);
         this.riderPauseStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_pause_png.png", density);
         int cacheSize = 4 * 1024 * 1024;
@@ -58,7 +59,7 @@ class MarkerIconPainter {
         this.clusterFontAlpha = a;
     }
 
-    public Bitmap getRiderAvatar(String path, String name, int status, float density, float ratio) {
+    public Bitmap getRiderAvatar(String path, String name, int status, float density, float ratio, boolean highlight) {
         Bitmap bitmap;
         if (path != null && !path.isEmpty()) {
             bitmap = getBitmapFromPath(path, density * ratio);
@@ -71,18 +72,31 @@ class MarkerIconPainter {
         switch (status) {
             case 1:
                 bitmapWithStatus = combineAvatarAndStatus(bitmap, riderPauseStatus, density);
+                if (highlight) {
+                    bitmapWithStatus = withHighlight(bitmapWithStatus, density * ratio);
+                }
                 break;
             case 2:
                 bitmapWithStatus = combineAvatarAndStatus(bitmap, riderLostStatus, density);
+                if (highlight) {
+                    bitmapWithStatus = withHighlight(bitmapWithStatus, density * ratio);
+                }
                 break;
             case 3:
                 bitmapWithStatus = combineAvatarAndStatus(bitmap, riderLeftStatus, density);
+                if (highlight) {
+                    bitmapWithStatus = withHighlight(bitmapWithStatus, density * ratio);
+                }
                 break;
             case 5:
                 bitmapWithStatus = withSos(bitmap, density * ratio);
                 break;
             default:
-                bitmapWithStatus = bitmap;
+                if (highlight) {
+                    bitmapWithStatus = withHighlight(bitmap, density * ratio);
+                } else {
+                    bitmapWithStatus = bitmap;
+                }
                 break;
         }
 
@@ -234,6 +248,27 @@ class MarkerIconPainter {
         Paint paintImage = new Paint();
         paintImage.setXfermode(new PorterDuffXfermode(Mode.SRC_ATOP));
         canvas.drawBitmap(avatar, shadowSize, shadowSize, paintImage);
+
+        return output;
+    }
+
+    private Bitmap withHighlight(Bitmap avatar, float density) {
+        int shadowSize = (int) Math.ceil(10 * density);
+        int offset = (int) Math.ceil(2 * density);
+        int widthLight = avatar.getWidth() + shadowSize * 2;
+        int heightLight = avatar.getHeight() + shadowSize * 2;
+
+        Bitmap output = Bitmap.createBitmap(widthLight, heightLight, Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+
+        Paint shadowPaint = new Paint();
+        shadowPaint.setShadowLayer(10, 0.f, 0.f, Color.GREEN);
+        shadowPaint.setColor(Color.GREEN);
+        shadowPaint.setMaskFilter(new BlurMaskFilter(40, BlurMaskFilter.Blur.OUTER));
+        RectF rectF = new RectF(new Rect(shadowSize + offset, shadowSize + offset, avatar.getWidth() + shadowSize - offset, avatar.getWidth() + shadowSize - offset));
+        canvas.drawOval(rectF, shadowPaint);
+
+        canvas.drawBitmap(avatar, shadowSize, shadowSize, null);
 
         return output;
     }

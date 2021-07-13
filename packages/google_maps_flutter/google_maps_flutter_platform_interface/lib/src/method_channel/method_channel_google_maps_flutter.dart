@@ -160,7 +160,7 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
   }
 
   @override
-  Stream<MapReadyEvent> onMapReady({@required int mapId}) {
+  Stream<MapReadyEvent> onMapReady({required int mapId}) {
     return _events(mapId).whereType<MapReadyEvent>();
   }
 
@@ -609,7 +609,7 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
         '$defaultTargetPlatform is not yet supported by the maps plugin');
   }
 
-  Future<void> updateNavigationIndex(int index, dynamic point, { @required int mapId}) {
+  Future<void> updateNavigationIndex(int index, dynamic point, { required int mapId}) {
     return channel(mapId).invokeMethod<void>('map#updateNavigationIndex', {
       "index": index,
       "point": point,
@@ -617,7 +617,7 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
   }
 
   @override
-  Future<void> initNavigationPolyline(List<dynamic> points, {Polyline skippedPolyline, Polyline remainingPolyline, @required int mapId}) {
+  Future<void> initNavigationPolyline(List<dynamic> points, {required Polyline skippedPolyline, required Polyline remainingPolyline, required int mapId}) {
     return channel(mapId).invokeMethod<void>('map#initNavigationPolyline', {
       'points': points,
       'skippedPolyline': skippedPolyline.toJson(),
@@ -626,47 +626,47 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
   }
 
   @override
-  Future<void> initPolyline(Polyline polyline, {@required int mapId}) {
+  Future<void> initPolyline(Polyline polyline, {required int mapId}) {
     return channel(mapId).invokeMethod<void>('map#initPolyline', polyline.toJson());
   }
 
   @override
-  Future<void> appendPolylinePoints(PolylineId polylineId, List<dynamic> points, {@required int mapId}) {
+  Future<void> appendPolylinePoints(PolylineId polylineId, List<dynamic> points, {required int mapId}) {
     return channel(mapId).invokeMethod<void>('map#appendPolylinePoints', {
       'polylineId': polylineId.value,
       "points": points,
     });
   }
 
-  Future<void> updateDynamicMarkers(Set<Marker> markers, {@required int mapId}) {
+  Future<void> updateDynamicMarkers(Set<Marker> markers, {required int mapId}) {
     return channel(mapId).invokeMethod<void>('map#updateDynamicMarkers', {
       'markers': serializeMarkerSet(markers),
     });
   }
 
-  Future<void> vdRemoveMarkers(Set<MarkerId> markerIds, {@required int mapId}) {
+  Future<void> vdRemoveMarkers(Set<MarkerId> markerIds, {required int mapId}) {
     return channel(mapId).invokeMethod<void>('map#removeMarkers', {
       'markerIds': markerIds.map<dynamic>((MarkerId m) => m.value).toList(),
     });
   }
 
-  Future<void> vdAddSelfMarker(Marker marker, {@required int mapId}) {
+  Future<void> vdAddSelfMarker(Marker marker, {required int mapId}) {
     return channel(mapId).invokeMethod<void>('map#initMarker', {
       'markers': serializeMarkerSet({marker}),
     });
   }
 
-  Future<void> vdUpdateSelfMarker(Marker marker, {@required int mapId}) {
+  Future<void> vdUpdateSelfMarker(Marker marker, {required int mapId}) {
     return channel(mapId).invokeMethod<void>('map#updateMarker', {
       'markers': serializeMarkerSet({marker}),
     });
   }
 
-  Future<void> cluster({@required int mapId}) {
+  Future<void> cluster({required int mapId}) {
     return channel(mapId).invokeMethod<void>("map#cluster");
   }
 
-  Future<void> setClusterMarkerStyle(Color background, Color font, {@required int mapId}) {
+  Future<void> setClusterMarkerStyle(Color background, Color font, {required int mapId}) {
     return channel(mapId).invokeMethod<void>('map#setClusterMarkerStyle', {
       'background': {
         'a': background.alpha,

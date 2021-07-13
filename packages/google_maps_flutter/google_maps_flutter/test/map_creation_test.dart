@@ -133,6 +133,7 @@ class TestGoogleMapsFlutterPlatform extends GoogleMapsFlutterPlatform {
   Future<void> animateCamera(
     CameraUpdate cameraUpdate, {
     required int mapId,
+    int animationSpeed = 2000,
   }) async {}
 
   @override

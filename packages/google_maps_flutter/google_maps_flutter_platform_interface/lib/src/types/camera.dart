@@ -136,7 +136,7 @@ class CameraUpdate {
     ]);
   }
 
-  static CameraUpdate newLatLngBoundsWithEdgeInsets(LatLngBounds bounds, {double top, double left, double bottom, double right}) {
+  static CameraUpdate newLatLngBoundsWithEdgeInsets(LatLngBounds bounds, {double top = .0, double left = .0, double bottom = .0, double right = .0}) {
     return CameraUpdate._(<dynamic>[
       'newLatLngBoundsWithEdgeInsets',
       bounds.toJson(),

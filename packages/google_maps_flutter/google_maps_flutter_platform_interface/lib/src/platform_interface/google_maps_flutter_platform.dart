@@ -148,7 +148,7 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
   Future<void> animateCamera(
     CameraUpdate cameraUpdate, {
     required int mapId,
-    int animationSpeed,
+    int animationSpeed = 2000,
   }) {
     throw UnimplementedError('animateCamera() has not been implemented.');
   }
@@ -344,12 +344,12 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
   }
 
   /// when animate camera is completed
-  Stream<AnimateCameraCompletedEvent> animateCameraCompleted({@required int mapId}) {
+  Stream<AnimateCameraCompletedEvent> animateCameraCompleted({required int mapId}) {
     throw UnimplementedError('animateCameraCompleted() has not been implemented.');
   }
 
   /// when map is ready
-  Stream<MapReadyEvent> onMapReady({@required int mapId}) {
+  Stream<MapReadyEvent> onMapReady({required int mapId}) {
     throw UnimplementedError('onMapReady() has not been implemented.');
   }
 
@@ -372,43 +372,43 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
     throw UnimplementedError('buildView() has not been implemented.');
   }
 
-  Future<void> updateNavigationIndex(int index, dynamic point, { @required int mapId}) {
+  Future<void> updateNavigationIndex(int index, dynamic point, { required int mapId}) {
     throw UnimplementedError('initNavigationPolyline() has not been implemented.');
   }
 
-  Future<void> initNavigationPolyline(List<dynamic> points, {Polyline skippedPolyline, Polyline remainingPolyline, @required int mapId}) {
+  Future<void> initNavigationPolyline(List<dynamic> points, {required Polyline skippedPolyline, required Polyline remainingPolyline, required int mapId}) {
     throw UnimplementedError('initNavigationPolyline() has not been implemented.');
   }
 
-  Future<void> initPolyline(Polyline polyline, {@required int mapId}) {
+  Future<void> initPolyline(Polyline polyline, {required int mapId}) {
     throw UnimplementedError('initPolyline() has not been implemented.');
   }
 
-  Future<void> appendPolylinePoints(PolylineId polylineId, List<dynamic> points, {@required int mapId}) {
+  Future<void> appendPolylinePoints(PolylineId polylineId, List<dynamic> points, {required int mapId}) {
     throw UnimplementedError('addTrackingPoints() has not been implemented.');
   }
 
-  Future<void> updateDynamicMarkers(Set<Marker> markers, {@required int mapId}) {
+  Future<void> updateDynamicMarkers(Set<Marker> markers, {required int mapId}) {
     throw UnimplementedError('vdUpdateRiderMarkers() has not been implemented.');
   }
 
-  Future<void> vdRemoveMarkers(Set<MarkerId> markerIds, {@required int mapId}) {
+  Future<void> vdRemoveMarkers(Set<MarkerId> markerIds, {required int mapId}) {
     throw UnimplementedError('removeMarkers() has not been implemented.');
   }
 
-  Future<void> vdAddSelfMarker(Marker marker, {@required int mapId}) {
+  Future<void> vdAddSelfMarker(Marker marker, {required int mapId}) {
     throw UnimplementedError('vdAddSelfMarker() has not been implemented.');
   }
 
-  Future<void> vdUpdateSelfMarker(Marker marker, {@required int mapId}) {
+  Future<void> vdUpdateSelfMarker(Marker marker, {required int mapId}) {
     throw UnimplementedError('vdUpdateSelfMarker() has not been implemented.');
   }
 
-  Future<void> cluster({@required int mapId}) {
+  Future<void> cluster({required int mapId}) {
     throw UnimplementedError("cluster has not been implemented.");
   }
 
-  Future<void> setClusterMarkerStyle(Color background, Color font, {@required int mapId}) {
+  Future<void> setClusterMarkerStyle(Color background, Color font, {required int mapId}) {
     throw UnimplementedError("setClusterMarkerStyle has not been implemented.");
   }
 }

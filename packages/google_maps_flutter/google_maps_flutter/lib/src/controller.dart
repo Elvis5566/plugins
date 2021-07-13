@@ -56,11 +56,11 @@ class GoogleMapController {
   final _GoogleMapState _googleMapState;
 
   void _connectStreams(int mapId) {
-    _googleMapsFlutterPlatform
+    GoogleMapsFlutterPlatform.instance
         .onMapReady(mapId: mapId)
         .listen((_) {
       _googleMapState.widget.onMapReady?.call();
-      _googleMapsFlutterPlatform.onMapReady(mapId: mapId).listen((_) => null);
+      GoogleMapsFlutterPlatform.instance.onMapReady(mapId: mapId).listen((_) => null);
     });
     if (_googleMapState.widget.onCameraMoveStarted != null) {
       GoogleMapsFlutterPlatform.instance
@@ -79,7 +79,7 @@ class GoogleMapController {
 
     GoogleMapsFlutterPlatform.instance
         .onMarkerTap(mapId: mapId)
-        .listen((MarkerTapEvent e) => {
+        .listen((MarkerTapEvent e) {
             _googleMapState.onMarkerTap(e.value);
             _markerOnTapStreamController.add(e.value);
         });
@@ -201,7 +201,7 @@ class GoogleMapController {
   /// platform side.
   Future<void> animateCamera(CameraUpdate cameraUpdate, {int animationSpeed = 2000, OnAnimationCompletedCallback? onAnimationCompletedCallback}) {
     _onAnimationCompletedCallback = onAnimationCompletedCallback;
-    return _googleMapsFlutterPlatform.animateCamera(cameraUpdate, mapId: mapId, animationSpeed: animationSpeed);
+    return GoogleMapsFlutterPlatform.instance.animateCamera(cameraUpdate, mapId: mapId, animationSpeed: animationSpeed);
   }
 
   /// Changes the map camera position.
@@ -313,42 +313,42 @@ class GoogleMapController {
   }
 
   Future<void> updateNavigationIndex(int index, dynamic point) {
-    return _googleMapsFlutterPlatform.updateNavigationIndex(index, point, mapId: mapId);
+    return GoogleMapsFlutterPlatform.instance.updateNavigationIndex(index, point, mapId: mapId);
   }
 
-  Future<void> initNavigationPolyline(List<dynamic> points, {Polyline skippedPolyline, Polyline remainingPolyline}) {
-    return _googleMapsFlutterPlatform.initNavigationPolyline(points, skippedPolyline: skippedPolyline, remainingPolyline: remainingPolyline, mapId: mapId);
+  Future<void> initNavigationPolyline(List<dynamic> points, {required Polyline skippedPolyline, required Polyline remainingPolyline}) {
+    return GoogleMapsFlutterPlatform.instance.initNavigationPolyline(points, skippedPolyline: skippedPolyline, remainingPolyline: remainingPolyline, mapId: mapId);
   }
 
   Future<void> initPolyline(Polyline polyline) {
-    return _googleMapsFlutterPlatform.initPolyline(polyline, mapId: mapId);
+    return GoogleMapsFlutterPlatform.instance.initPolyline(polyline, mapId: mapId);
   }
 
   Future<void> appendPolylinePoints(PolylineId polylineId, List<dynamic> points) {
-    return _googleMapsFlutterPlatform.appendPolylinePoints(polylineId, points, mapId: mapId);
+    return GoogleMapsFlutterPlatform.instance.appendPolylinePoints(polylineId, points, mapId: mapId);
   }
 
   Future<void> updateDynamicMarkers(Set<Marker> markers) {
-    return _googleMapsFlutterPlatform.updateDynamicMarkers(markers, mapId: mapId);
+    return GoogleMapsFlutterPlatform.instance.updateDynamicMarkers(markers, mapId: mapId);
   }
 
   Future<void> removeMarkers(Set<MarkerId> markerIds) {
-    return _googleMapsFlutterPlatform.vdRemoveMarkers(markerIds, mapId: mapId);
+    return GoogleMapsFlutterPlatform.instance.vdRemoveMarkers(markerIds, mapId: mapId);
   }
 
   Future<void> addSelfMarker(Marker marker) {
-    return _googleMapsFlutterPlatform.vdAddSelfMarker(marker, mapId: mapId);
+    return GoogleMapsFlutterPlatform.instance.vdAddSelfMarker(marker, mapId: mapId);
   }
 
   Future<void> updateSelfMarker(Marker marker) {
-    return _googleMapsFlutterPlatform.vdUpdateSelfMarker(marker, mapId: mapId);
+    return GoogleMapsFlutterPlatform.instance.vdUpdateSelfMarker(marker, mapId: mapId);
   }
 
   Future<void> cluster() {
-    return _googleMapsFlutterPlatform.cluster(mapId: mapId);
+    return GoogleMapsFlutterPlatform.instance.cluster(mapId: mapId);
   }
 
   Future<void> setClusterMarkerStyle(Color background, Color font) {
-    return _googleMapsFlutterPlatform.setClusterMarkerStyle(background, font, mapId: mapId);
+    return GoogleMapsFlutterPlatform.instance.setClusterMarkerStyle(background, font, mapId: mapId);
   }
 }

@@ -17,7 +17,6 @@ Downloaded by pub (not CocoaPods).
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  // s.dependency 'GoogleMaps' < '3.1.0'
   s.dependency 'GoogleMaps'
   s.dependency 'Google-Maps-iOS-Utils', '3.8.0'
   s.static_framework = true

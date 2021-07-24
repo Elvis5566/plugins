@@ -410,9 +410,14 @@ class Convert {
     if (flat != null) {
       sink.setFlat(toBoolean(flat));
     }
+
     final Object icon = data.get("icon");
+
     if (icon != null) {
-      sink.setIcon(toBitmapDescriptor(icon));
+      final boolean isNullMarker = toString(toList(icon).get(0)).equals("nullMarker");
+      if (!isNullMarker) {
+        sink.setIcon(toBitmapDescriptor(icon));
+      }
     }
 
     final Object infoWindow = data.get("infoWindow");

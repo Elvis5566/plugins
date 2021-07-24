@@ -105,6 +105,7 @@ static NSArray* PositionToJson(CLLocationCoordinate2D data) {
 
 static void InterpretMarkerOptions(NSDictionary* data, id<FLTGoogleMapMarkerOptionsSink> sink,
                                    NSObject<FlutterPluginRegistrar>* registrar) {
+
   NSNumber* alpha = data[@"alpha"];
   if (alpha != nil) {
     [sink setAlpha:ToFloat(alpha)];
@@ -117,10 +118,14 @@ static void InterpretMarkerOptions(NSDictionary* data, id<FLTGoogleMapMarkerOpti
   if (draggable != nil) {
     [sink setDraggable:ToBool(draggable)];
   }
+
   NSArray* icon = data[@"icon"];
   if (icon) {
-    UIImage* image = ExtractIcon(registrar, icon);
-    [sink setIcon:image];
+    bool isNullMarker = [icon.firstObject isEqualToString:@"nullMarker"];
+    if (!isNullMarker) {
+      UIImage* image = ExtractIcon(registrar, icon);
+      [sink setIcon:image];
+    }
   }
   NSNumber* flat = data[@"flat"];
   if (flat != nil) {

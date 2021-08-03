@@ -80,8 +80,11 @@ class GoogleMapController {
     GoogleMapsFlutterPlatform.instance
         .onMarkerTap(mapId: mapId)
         .listen((MarkerTapEvent e) {
+          try {
             _googleMapState.onMarkerTap(e.value);
+          } on UnknownMapObjectIdError {
             _markerOnTapStreamController.add(e.value);
+          }
         });
 
     GoogleMapsFlutterPlatform.instance.onMarkerDragEnd(mapId: mapId).listen(

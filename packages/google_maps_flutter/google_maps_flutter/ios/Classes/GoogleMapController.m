@@ -399,7 +399,7 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
                   if (!rideStatus) rideStatus = [NSNumber numberWithInt:0];
                   NSNumber* ratio = extra[@"ratio"];
                   if (!ratio) ratio = [NSNumber numberWithFloat:1.0];
-                  BOOL highlight = extra[@"highlight"];
+                  BOOL highlight = [extra[@"highlight"] boolValue];
                   if (!highlight) highlight = NO;
                   UIImage* image = [_markerIconPainter getRiderAvatar:path name:name status:rideStatus.intValue ratio:ratio highlight:highlight];
                   NSMutableArray* icon = [[NSMutableArray alloc] init];

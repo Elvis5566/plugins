@@ -247,33 +247,37 @@ final class GoogleMapController
       }
 
       case "map#updateNavigationIndex": {
-        int index = call.argument("index");
+        if (navigationPoints != null && !navigationPoints.isEmpty()) {
+          int index = call.argument("index");
 
-        if (index >= 0 && index < navigationPoints.size()) {
-          Object _point = call.argument("point");
-          LatLng point = _point != null ? Convert.toLatLng(_point) : null;
+          if (index >= 0 && index < navigationPoints.size()) {
+            Object _point = call.argument("point");
+            LatLng point = _point != null ? Convert.toLatLng(_point) : null;
 
-          Polyline skippedPolyline = polylinesController.getPolylineController("skippedPolyline").getPolyline();
-          Polyline remainingPolyline = polylinesController.getPolylineController("remainingPolyline").getPolyline();
+            Polyline skippedPolyline = polylinesController.getPolylineController("skippedPolyline").getPolyline();
+            Polyline remainingPolyline = polylinesController.getPolylineController("remainingPolyline").getPolyline();
 
-          List<LatLng> skippedPoints = new ArrayList<>(navigationPoints.subList(0, index + 1));
-          if (point != null) {
-            skippedPoints.add(point);
+            List<LatLng> skippedPoints = new ArrayList<>(navigationPoints.subList(0, index + 1));
+            if (point != null) {
+              skippedPoints.add(point);
+            }
+
+            skippedPolyline.setPoints(skippedPoints);
+
+            List<LatLng> remainingPoints = new ArrayList<>(navigationPoints.subList(index, navigationPoints.size()));
+
+            if (point != null) {
+              remainingPoints.remove(0);
+              remainingPoints.add(0, point);
+            }
+
+            remainingPolyline.setPoints(remainingPoints);
           }
 
-          skippedPolyline.setPoints(skippedPoints);
-
-          List<LatLng> remainingPoints = new ArrayList<>(navigationPoints.subList(index, navigationPoints.size()));
-
-          if (point != null) {
-            remainingPoints.remove(0);
-            remainingPoints.add(0, point);
-          }
-
-          remainingPolyline.setPoints(remainingPoints);
+          result.success(null);
+        } else {
+          result.success(null);
         }
-
-        result.success(null);
         break;
       }
 
@@ -491,7 +495,7 @@ final class GoogleMapController
           }
         }
         long end = System.currentTimeMillis() - start;
-        Log.d("map#updateRiderMarkers", "execute size: " + String.valueOf(markersToUpdate.size()) + " execute time: " + String.valueOf(end) + "ms = " + String.valueOf(end / 1000) + "s");
+        Log.d("map#updateRiderMarkers", "execute size: " + " execute time: " + String.valueOf(end) + "ms = " + String.valueOf(end / 1000) + "s");
 
         markersController.addMarkers(markersToAdd);
         markersController.changeMarkers(markersToChange);

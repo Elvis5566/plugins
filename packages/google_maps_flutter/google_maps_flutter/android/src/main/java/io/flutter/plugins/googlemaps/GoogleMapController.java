@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Choreographer;
 import android.view.View;
 import android.content.res.AssetManager;
 
@@ -183,6 +184,17 @@ final class GoogleMapController
       }
     });
     clusterController.setClusterManager(clusterManager);
+  }
+
+  private static void postFrameCallback(Runnable f) {
+    Choreographer.getInstance()
+            .postFrameCallback(
+                    new Choreographer.FrameCallback() {
+                      @Override
+                      public void doFrame(long frameTimeNanos) {
+                        f.run();
+                      }
+                    });
   }
 
   @Override
@@ -1102,8 +1114,12 @@ final class GoogleMapController
     if (mapView == null) {
       return;
     }
-    mapView.onDestroy();
-    mapView = null;
+    postFrameCallback(() -> {
+      if (mapView != null) {
+        mapView.onDestroy();
+        mapView = null;
+      }
+    });
   }
 
   public void setIndoorEnabled(boolean indoorEnabled) {

@@ -37,7 +37,6 @@ class MarkerIconPainter {
     MarkerIconPainter(AssetManager mgr, float density) {
         this.mgr = mgr;
         this.riderLeftStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_left_png.png", density);
-        ;
         this.riderLostStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_disconnected_png.png", density);
         this.riderPauseStatus = getBitmapFromAsset(mgr, "common_app/assets/rider_pause_png.png", density);
         int cacheSize = 4 * 1024 * 1024;
@@ -60,10 +59,12 @@ class MarkerIconPainter {
     }
 
     public Bitmap getRiderAvatar(String path, String name, int status, float density, float ratio, boolean highlight) {
-        Bitmap bitmap;
+        Bitmap bitmap = null;
         if (path != null && !path.isEmpty()) {
             bitmap = getBitmapFromPath(path, density * ratio);
-        } else {
+        }
+
+        if (bitmap == null) {
             bitmap = getBitmapFromText(name, density * ratio);
         }
 
@@ -107,7 +108,10 @@ class MarkerIconPainter {
         try {
             return toAvatar(fromPathToBitmap(path, density), density);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Unable to interpret bytes as a valid image.", e);
+            // TODO: should pass exception to flutter, improve later.
+            Log.e("MarkerIconPainter", e.toString());
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -125,8 +129,9 @@ class MarkerIconPainter {
 
             final float ratio = Math.max(widthRatio, heightRatio);
             bitmap = scaleBitmap(bitmap, ratio);
-        } catch (final IOException e) {
-            bitmap = null;
+
+        } catch (final Exception e) {
+            // ignore error
         } finally {
             if (is != null) {
                 try {
@@ -217,6 +222,9 @@ class MarkerIconPainter {
     }
 
     private Bitmap combineAvatarAndStatus(Bitmap avatar, Bitmap status, float density) {
+        if (status == null) {
+            return avatar;
+        }
         int paddingSize = (int) Math.ceil(3 * density);
         int widthLight = avatar.getWidth() + paddingSize * 2;
         int heightLight = avatar.getHeight() + paddingSize * 2;

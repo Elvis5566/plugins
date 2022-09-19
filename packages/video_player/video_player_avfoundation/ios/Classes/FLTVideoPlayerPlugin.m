@@ -185,8 +185,10 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   if ([headers count] != 0) {
     options = @{@"AVURLAssetHTTPHeaderFieldsKey" : headers};
   }
-  AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
-  AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
+
+  NSString *mimeType = @"video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"";
+  AVURLAsset * asset = [[AVURLAsset alloc] initWithURL: url options:@{@"AVURLAssetOutOfBandMIMETypeKey": mimeType}];
+  AVPlayerItem* item = [ [AVPlayerItem alloc] initWithAsset: asset];
   return [self initWithPlayerItem:item frameUpdater:frameUpdater];
 }
 

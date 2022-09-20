@@ -6,6 +6,8 @@
 
 part of google_maps_flutter;
 
+typedef OnAnimationCompletedCallback = Future<void> Function();
+
 /// Controller for a single GoogleMap instance running on the host platform.
 class GoogleMapController {
   GoogleMapController._(
@@ -17,16 +19,17 @@ class GoogleMapController {
 
   /// The mapId for this controller
   final int mapId;
+  final StreamController<MarkerId> _markerOnTapStreamController = StreamController<MarkerId>();
+  Stream<MarkerId> get onMarkerTapStream => _markerOnTapStreamController.stream;
 
+  OnAnimationCompletedCallback? _onAnimationCompletedCallback;
   /// Initialize control of a [GoogleMap] with [id].
   ///
   /// Mainly for internal use when instantiating a [GoogleMapController] passed
   /// in [GoogleMap.onMapCreated] callback.
-  static Future<GoogleMapController> init(
-    int id,
-    CameraPosition initialCameraPosition,
-    _GoogleMapState googleMapState,
-  ) async {
+  static Future<GoogleMapController> init(int id,
+      CameraPosition initialCameraPosition,
+      _GoogleMapState googleMapState,) async {
     assert(id != null);
     await GoogleMapsFlutterPlatform.instance.init(id);
     return GoogleMapController._(
@@ -38,6 +41,11 @@ class GoogleMapController {
   final _GoogleMapState _googleMapState;
 
   void _connectStreams(int mapId) {
+    GoogleMapsFlutterPlatform.instance
+        .onMapReady(mapId: mapId)
+        .listen((_) {
+      _googleMapState.widget.onMapReady?.call();
+    });
     if (_googleMapState.widget.onCameraMoveStarted != null) {
       GoogleMapsFlutterPlatform.instance
           .onCameraMoveStarted(mapId: mapId)
@@ -54,7 +62,15 @@ class GoogleMapController {
     }
     GoogleMapsFlutterPlatform.instance
         .onMarkerTap(mapId: mapId)
-        .listen((MarkerTapEvent e) => _googleMapState.onMarkerTap(e.value));
+        .listen((MarkerTapEvent e) {
+          try {
+            _googleMapState.onMarkerTap(e.value);
+          } on UnknownMapObjectIdError {
+            // [Fix][Boris] Cannot pass through the marker on tap event. ???
+            _markerOnTapStreamController.add(e.value);
+          }
+        });
+
     GoogleMapsFlutterPlatform.instance.onMarkerDragStart(mapId: mapId).listen(
         (MarkerDragStartEvent e) =>
             _googleMapState.onMarkerDragStart(e.value, e.position));
@@ -80,6 +96,10 @@ class GoogleMapController {
         .listen((MapTapEvent e) => _googleMapState.onTap(e.position));
     GoogleMapsFlutterPlatform.instance.onLongPress(mapId: mapId).listen(
         (MapLongPressEvent e) => _googleMapState.onLongPress(e.position));
+    GoogleMapsFlutterPlatform.instance.animateCameraCompleted(mapId: mapId).listen((event) {
+      _onAnimationCompletedCallback?.call();
+      _onAnimationCompletedCallback = null;
+    });
   }
 
   /// Updates configuration options of the map user interface.
@@ -169,9 +189,9 @@ class GoogleMapController {
   ///
   /// The returned [Future] completes after the change has been started on the
   /// platform side.
-  Future<void> animateCamera(CameraUpdate cameraUpdate) {
-    return GoogleMapsFlutterPlatform.instance
-        .animateCamera(cameraUpdate, mapId: mapId);
+  Future<void> animateCamera(CameraUpdate cameraUpdate, {int animationSpeed = 2000, OnAnimationCompletedCallback? onAnimationCompletedCallback}) {
+    _onAnimationCompletedCallback = onAnimationCompletedCallback;
+    return GoogleMapsFlutterPlatform.instance.animateCamera(cameraUpdate, mapId: mapId, animationSpeed: animationSpeed);
   }
 
   /// Changes the map camera position.
@@ -280,5 +300,45 @@ class GoogleMapController {
   /// Disposes of the platform resources
   void dispose() {
     GoogleMapsFlutterPlatform.instance.dispose(mapId: mapId);
+  }
+
+  Future<void> updateNavigationIndex(int index, dynamic point) {
+    return GoogleMapsFlutterPlatform.instance.updateNavigationIndex(index, point, mapId: mapId);
+  }
+
+  Future<void> initNavigationPolyline(List<dynamic> points, {required Polyline skippedPolyline, required Polyline remainingPolyline}) {
+    return GoogleMapsFlutterPlatform.instance.initNavigationPolyline(points, skippedPolyline: skippedPolyline, remainingPolyline: remainingPolyline, mapId: mapId);
+  }
+
+  Future<void> initPolyline(Polyline polyline) {
+    return GoogleMapsFlutterPlatform.instance.initPolyline(polyline, mapId: mapId);
+  }
+
+  Future<void> appendPolylinePoints(PolylineId polylineId, List<dynamic> points) {
+    return GoogleMapsFlutterPlatform.instance.appendPolylinePoints(polylineId, points, mapId: mapId);
+  }
+
+  Future<void> updateDynamicMarkers(Set<Marker> markers) {
+    return GoogleMapsFlutterPlatform.instance.updateDynamicMarkers(markers, mapId: mapId);
+  }
+
+  Future<void> removeMarkers(Set<MarkerId> markerIds) {
+    return GoogleMapsFlutterPlatform.instance.vdRemoveMarkers(markerIds, mapId: mapId);
+  }
+
+  Future<void> addSelfMarker(Marker marker) {
+    return GoogleMapsFlutterPlatform.instance.vdAddSelfMarker(marker, mapId: mapId);
+  }
+
+  Future<void> updateSelfMarker(Marker marker) {
+    return GoogleMapsFlutterPlatform.instance.vdUpdateSelfMarker(marker, mapId: mapId);
+  }
+
+  Future<void> cluster() {
+    return GoogleMapsFlutterPlatform.instance.cluster(mapId: mapId);
+  }
+
+  Future<void> setClusterMarkerStyle(Color background, Color font) {
+    return GoogleMapsFlutterPlatform.instance.setClusterMarkerStyle(background, font, mapId: mapId);
   }
 }

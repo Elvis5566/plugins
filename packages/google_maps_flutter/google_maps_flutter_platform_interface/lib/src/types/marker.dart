@@ -155,7 +155,11 @@ class Marker implements MapsObject<Marker> {
     this.onDrag,
     this.onDragStart,
     this.onDragEnd,
-  }) : assert(alpha == null || (0.0 <= alpha && alpha <= 1.0));
+    this.clusterable = false,
+    Map<String, dynamic>? extra,
+  })
+      : assert(alpha == null || (0.0 <= alpha && alpha <= 1.0)),
+        extra = extra ?? const <String, dynamic>{};
 
   /// Uniquely identifies a [Marker].
   final MarkerId markerId;
@@ -223,6 +227,10 @@ class Marker implements MapsObject<Marker> {
   /// Signature reporting the new [LatLng] during the drag event.
   final ValueChanged<LatLng>? onDrag;
 
+  final Map<String, dynamic> extra;
+
+  final bool clusterable;
+
   /// Creates a new [Marker] object whose values are the same as this instance,
   /// unless overwritten by the specified parameters.
   Marker copyWith({
@@ -241,6 +249,7 @@ class Marker implements MapsObject<Marker> {
     ValueChanged<LatLng>? onDragStartParam,
     ValueChanged<LatLng>? onDragParam,
     ValueChanged<LatLng>? onDragEndParam,
+    bool? clusterable,
   }) {
     return Marker(
       markerId: markerId,
@@ -259,6 +268,7 @@ class Marker implements MapsObject<Marker> {
       onDragStart: onDragStartParam ?? onDragStart,
       onDrag: onDragParam ?? onDrag,
       onDragEnd: onDragEndParam ?? onDragEnd,
+      clusterable: clusterable ?? false,
     );
   }
 
@@ -289,6 +299,8 @@ class Marker implements MapsObject<Marker> {
     addIfPresent('rotation', rotation);
     addIfPresent('visible', visible);
     addIfPresent('zIndex', zIndex);
+    addIfPresent('extra', extra);
+    addIfPresent('clusterable', clusterable);
     return json;
   }
 
@@ -312,7 +324,8 @@ class Marker implements MapsObject<Marker> {
         position == other.position &&
         rotation == other.rotation &&
         visible == other.visible &&
-        zIndex == other.zIndex;
+        zIndex == other.zIndex &&
+        clusterable == other.clusterable;
   }
 
   @override

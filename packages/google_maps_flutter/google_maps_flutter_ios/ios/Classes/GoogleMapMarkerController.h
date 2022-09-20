@@ -39,6 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)hideMarkerInfoWindowWithIdentifier:(NSString *)identifier result:(FlutterResult)result;
 - (void)isInfoWindowShownForMarkerWithIdentifier:(NSString *)identifier
                                           result:(FlutterResult)result;
+- (BOOL)checkIfMarkerExists:(NSString*)markerId;
 @end
 
 NS_ASSUME_NONNULL_END

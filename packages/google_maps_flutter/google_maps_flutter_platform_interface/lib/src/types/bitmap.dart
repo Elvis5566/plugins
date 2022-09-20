@@ -63,6 +63,7 @@ class BitmapDescriptor {
   }
 
   static const String _defaultMarker = 'defaultMarker';
+  static const String _nullMarker = 'nullMarker';
   static const String _fromAsset = 'fromAsset';
   static const String _fromAssetImage = 'fromAssetImage';
   static const String _fromBytes = 'fromBytes';
@@ -107,6 +108,9 @@ class BitmapDescriptor {
   /// Creates a BitmapDescriptor that refers to the default marker image.
   static const BitmapDescriptor defaultMarker =
       BitmapDescriptor._(<Object>[_defaultMarker]);
+
+  static const BitmapDescriptor nullMarker =
+      BitmapDescriptor._(<Object>[_nullMarker]);
 
   /// Creates a BitmapDescriptor that refers to a colorization of the default
   /// marker image. For convenience, there is a predefined set of hue values.

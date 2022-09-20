@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:google_maps_flutter_platform_interface/src/platform_interface/velodash_custom.dart';
 import 'package:google_maps_flutter_platform_interface/src/types/utils/map_configuration_serialization.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -24,7 +25,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 /// Do `extends GoogleMapsFlutterPlatform` instead, so new methods added here are
 /// inherited in your code with the default implementation (that throws at runtime),
 /// rather than breaking your users at compile time.
-abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
+abstract class GoogleMapsFlutterPlatform extends PlatformInterface with VelodashCustom {
   /// Constructs a GoogleMapsFlutterPlatform.
   GoogleMapsFlutterPlatform() : super(token: _token);
 
@@ -165,6 +166,7 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
   Future<void> animateCamera(
     CameraUpdate cameraUpdate, {
     required int mapId,
+    int animationSpeed = 2000,
   }) {
     throw UnimplementedError('animateCamera() has not been implemented.');
   }

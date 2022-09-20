@@ -8,6 +8,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.SnapshotReadyCallback;
 import com.google.android.gms.maps.GoogleMapOptions;
@@ -34,17 +36,23 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.Polyline;
-import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
-import io.flutter.plugin.common.BinaryMessenger;
-import io.flutter.plugin.common.MethodCall;
-import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.platform.PlatformView;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
+import com.google.maps.android.collections.MarkerManager;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.platform.PlatformView;
 
 /** Controller of a single GoogleMaps MapView instance. */
 final class GoogleMapController
@@ -75,6 +83,7 @@ final class GoogleMapController
   private final Context context;
   private final LifecycleProvider lifecycleProvider;
   private final MarkersController markersController;
+  private final ClusterController clusterController;
   private final PolygonsController polygonsController;
   private final PolylinesController polylinesController;
   private final CirclesController circlesController;
@@ -84,6 +93,12 @@ final class GoogleMapController
   private List<Object> initialPolylines;
   private List<Object> initialCircles;
   private List<Map<String, ?>> initialTileOverlays;
+  private final AssetManager mgr;
+  private ClusterManager<BClusterItem> clusterManager;
+  private BMarkerManager markerManger;
+  private MarkerIconPainter _markerIconPainter;
+
+  private List<LatLng> navigationPoints;
 
   GoogleMapController(
       int id,
@@ -101,10 +116,13 @@ final class GoogleMapController
     methodChannel.setMethodCallHandler(this);
     this.lifecycleProvider = lifecycleProvider;
     this.markersController = new MarkersController(methodChannel);
+    this.clusterController = new ClusterController(methodChannel);
     this.polygonsController = new PolygonsController(methodChannel, density);
     this.polylinesController = new PolylinesController(methodChannel, density);
     this.circlesController = new CirclesController(methodChannel, density);
     this.tileOverlaysController = new TileOverlaysController(methodChannel);
+    this.mgr = context.getAssets();
+    this._markerIconPainter = new MarkerIconPainter(mgr, density);
   }
 
   @Override
@@ -126,12 +144,50 @@ final class GoogleMapController
     googleMap.moveCamera(cameraUpdate);
   }
 
-  private void animateCamera(CameraUpdate cameraUpdate) {
-    googleMap.animateCamera(cameraUpdate);
+  private void animateCamera(CameraUpdate cameraUpdate, int animationSpeed) {
+    googleMap.animateCamera(cameraUpdate, animationSpeed, new GoogleMap.CancelableCallback() {
+      @Override
+      public void onFinish() {
+        methodChannel.invokeMethod("camera#animationCompleted", Collections.singletonMap("map", id));
+      }
+
+      @Override
+      public void onCancel() {
+        methodChannel.invokeMethod("camera#animationCompleted", Collections.singletonMap("map", id));
+      }
+    });
   }
 
   private CameraPosition getCameraPosition() {
     return trackCameraPosition ? googleMap.getCameraPosition() : null;
+  }
+
+  private void initClusterManager(final GoogleMap googleMap, final BMarkerManager markerManger) {
+    clusterManager = new ClusterManager<>(context, googleMap, markerManger);
+    final BClusterRendered renderer = new BClusterRendered(context, googleMap, clusterManager, _markerIconPainter);
+    renderer.setDensity(density);
+    renderer.setMinClusterSize(10);
+    final GridBasedAlgorithm algorithm = new  GridBasedAlgorithm();
+    algorithm.setMaxDistanceBetweenClusteredItems(50);
+    clusterManager.setAlgorithm(algorithm);
+    clusterManager.setRenderer(renderer);
+    clusterManager.setAnimation(false);
+    clusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<BClusterItem>() {
+      @Override
+      public boolean onClusterItemClick(BClusterItem item) {
+        clusterController.onClusterItemClick(item);
+        return true;
+      }
+    });
+    clusterManager.setOnClusterClickListener(new ClusterManager.OnClusterClickListener<BClusterItem>() {
+      @Override
+      public boolean onClusterClick(Cluster<BClusterItem> cluster) {
+        final float zoom = googleMap.getCameraPosition().zoom + 1.0f;
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(cluster.getPosition(), zoom), 500, null);
+        return true;
+      }
+    });
+    clusterController.setClusterManager(clusterManager);
   }
 
   private boolean loadedCallbackPending = false;
@@ -204,15 +260,219 @@ final class GoogleMapController
     polylinesController.setGoogleMap(googleMap);
     circlesController.setGoogleMap(googleMap);
     tileOverlaysController.setGoogleMap(googleMap);
+
+    markerManger = new BMarkerManager(googleMap, markersController);
+    initClusterManager(googleMap, markerManger);
+
     updateInitialMarkers();
     updateInitialPolygons();
     updateInitialPolylines();
     updateInitialCircles();
     updateInitialTileOverlays();
+    methodChannel.invokeMethod("map#ready", Collections.singletonMap("map", id));
+  }
+
+  private boolean onMethodCallVelodashCustom(MethodCall call, MethodChannel.Result result) {
+    switch (call.method) {
+      case "map#initNavigationPolyline": {
+        navigationPoints = Convert.toPoints(call.argument("points"));
+
+        List<Object> removedPolylines = new ArrayList<>();
+        removedPolylines.add("remainingPolyline");
+        polylinesController.removePolylines(removedPolylines);
+
+        List<Object> polylines = new ArrayList<>();
+        polylines.add(call.argument("skippedPolyline"));
+        polylines.add(call.argument("remainingPolyline"));
+        polylinesController.addPolylines(polylines);
+
+        Polyline remainingPolyline = polylinesController.getPolylineController("remainingPolyline").getPolyline();
+        remainingPolyline.setPoints(navigationPoints);
+
+        result.success(null);
+        return true;
+      }
+
+      case "map#updateNavigationIndex": {
+        if (navigationPoints != null && !navigationPoints.isEmpty()) {
+          int index = call.argument("index");
+
+          if (index >= 0 && index < navigationPoints.size()) {
+            Object _point = call.argument("point");
+            LatLng point = _point != null ? Convert.toLatLng(_point) : null;
+
+            Polyline skippedPolyline = polylinesController.getPolylineController("skippedPolyline").getPolyline();
+            Polyline remainingPolyline = polylinesController.getPolylineController("remainingPolyline").getPolyline();
+
+            List<LatLng> skippedPoints = new ArrayList<>(navigationPoints.subList(0, index + 1));
+            if (point != null) {
+              skippedPoints.add(point);
+            }
+
+            skippedPolyline.setPoints(skippedPoints);
+
+            List<LatLng> remainingPoints = new ArrayList<>(navigationPoints.subList(index, navigationPoints.size()));
+
+            if (point != null) {
+              remainingPoints.remove(0);
+              remainingPoints.add(0, point);
+            }
+
+            remainingPolyline.setPoints(remainingPoints);
+          }
+
+          result.success(null);
+        } else {
+          result.success(null);
+        }
+        return true;
+      }
+
+      case "map#initPolyline": {
+        List<Object> polylines = new ArrayList<>();
+        polylines.add(call.arguments);
+        polylinesController.addPolylines(polylines);
+
+        result.success(null);
+        return true;
+      }
+
+      case "map#appendPolylinePoints": {
+        String polylineId = call.argument("polylineId");
+
+        Polyline polyline = polylinesController.getPolylineController(polylineId).getPolyline();
+        List<LatLng> points = polyline.getPoints();
+
+        points.addAll(Convert.toPoints(call.argument("points")));
+
+        polyline.setPoints(points);
+
+        result.success(null);
+        return true;
+      }
+
+      case "map#initMarker":
+      {
+        List<Object> markersToAdd = call.argument("markers");
+        markersController.addMarkers(markersToAdd);
+        result.success(null);
+        return true;
+      }
+      case "map#updateMarker":
+      {
+        List<Object> markersToChange = call.argument("markers");
+        markersController.changeMarkers(markersToChange);
+        result.success(null);
+        return true;
+      }
+      case "map#updateDynamicMarkers":
+      {
+        List<Object> markersToUpdate = call.argument("markers");
+        List<Object> markersToChange = new ArrayList<Object>();
+        List<Object> markersToAdd = new ArrayList<Object>();
+        List<Object> clusterMarkers = new ArrayList<>();
+        List<Object> removeFromCluster = new ArrayList<>();
+        List<Object> removeFromMarkerManager = new ArrayList<>();
+
+        long start = System.currentTimeMillis();
+        for (Object marker : markersToUpdate) {
+          final Map<String, ? super Object> data = (Map<String, ? super Object>) marker;
+          final boolean clusterable = data.containsKey("clusterable") && (Boolean) data.get("clusterable");
+          final String markerId = (String) data.get("markerId");
+          if (clusterable) {
+            clusterMarkers.add(marker);
+            if (markersController.checkMarkerIsExist(markerId)) {
+              removeFromMarkerManager.add(markerId);
+            }
+          } else {
+            final Map<String, Object> extra = (Map<String, Object>) data.get("extra");
+            if (clusterController.checkMarkerIsExist(markerId)) {
+              removeFromCluster.add(markerId);
+            }
+            if (extra == null || extra.isEmpty()) {
+              data.put("icon", null);
+              markersToChange.add(marker);
+            } else {
+              final String path = (String) extra.get("path");
+              final String name = (String) extra.get("name");
+              final int rideStatus = (int) (extra.containsKey("rideStatus") ? extra.get("rideStatus") : 0);
+              final float ratio = (float) (extra.containsKey("ratio") ? ((Double) extra.get("ratio")).floatValue() : 1.0f);
+              final boolean highlight = (boolean) (extra.containsKey("highlight") ? extra.get("highlight") : false);
+              final Bitmap bitmap = _markerIconPainter.getRiderAvatar(path, name, rideStatus, density, ratio, highlight);
+              final List<Object> icon = new ArrayList<Object>();
+              icon.add((Object) "fromBitmap");
+              icon.add((Object) bitmap);
+              data.put("icon", icon);
+              if (markersController.checkMarkerIsExist(markerId)) {
+                markersToChange.add(marker);
+              } else {
+                markersToAdd.add(marker);
+              }
+            }
+          }
+        }
+        long end = System.currentTimeMillis() - start;
+        Log.d("map#updateRiderMarkers", "execute size: " + " execute time: " + String.valueOf(end) + "ms = " + String.valueOf(end / 1000) + "s");
+
+        markersController.addMarkers(markersToAdd);
+        markersController.changeMarkers(markersToChange);
+        clusterController.addOrUpdateMarkers(clusterMarkers);
+        markersController.removeMarkers(removeFromMarkerManager);
+        clusterController.removeMarkers(removeFromCluster);
+        result.success(null);
+        return true;
+      }
+      case "map#removeMarkers":
+      {
+        List<Object> markerIdsToRemove = call.argument("markerIds");
+        markersController.removeMarkers(markerIdsToRemove);
+        clusterController.removeMarkers(markerIdsToRemove);
+        result.success(null);
+        return true;
+      }
+      case "map#setPadding":
+      {
+        double top = (double)  call.argument("top");
+        double left = (double) call.argument("left");
+        double bottom = (double) call.argument("bottom");
+        double right = (double) call.argument("right");
+        setPadding((float) top, (float) left, (float) bottom, (float) right);
+        result.success(null);
+        return true;
+      }
+      case "map#cluster":
+      {
+        clusterManager.cluster();
+        result.success(null);
+        return true;
+      }
+      case "map#setClusterMarkerStyle":
+      {
+        Map<String, Object> background = call.argument("background");
+        Map<String, Object> font = call.argument("font");
+        final int ba = (int) (background.containsKey("a") ? background.get("a") : 153);
+        final int br = (int) (background.containsKey("r") ? background.get("r") : 8);
+        final int bg = (int) (background.containsKey("g") ? background.get("g") : 27);
+        final int bb = (int) (background.containsKey("b") ? background.get("b") : 51);
+        final int fr = (int) (font.containsKey("r") ? font.get("r") : 255);
+        final int fg = (int) (font.containsKey("g") ? font.get("g") : 255);
+        final int fb = (int) (font.containsKey("b") ? font.get("b") : 255);
+        final int fa = (int) (font.containsKey("a") ? font.get("a") : 255);
+        _markerIconPainter.setClusterBackgroundColor(br, bg, bb, (float)(ba / 255.0f));
+        _markerIconPainter.setClusterFontColor(fr, fg, fb, (float)(fa / 255.0f));
+        result.success(null);
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
+    if (onMethodCallVelodashCustom(call, result)) {
+      return;
+    }
+
     switch (call.method) {
       case "map#waitForMap":
         if (googleMap != null) {
@@ -229,6 +489,7 @@ final class GoogleMapController
         }
       case "map#getVisibleRegion":
         {
+          clusterManager.cluster();
           if (googleMap != null) {
             LatLngBounds latLngBounds = googleMap.getProjection().getVisibleRegion().latLngBounds;
             result.success(Convert.latlngBoundsToJson(latLngBounds));
@@ -245,6 +506,8 @@ final class GoogleMapController
           if (googleMap != null) {
             LatLng latLng = Convert.toLatLng(call.arguments);
             Point screenLocation = googleMap.getProjection().toScreenLocation(latLng);
+            screenLocation.x /= density;
+            screenLocation.y /= density;
             result.success(Convert.pointToJson(screenLocation));
           } else {
             result.error(
@@ -290,6 +553,16 @@ final class GoogleMapController
         {
           final CameraUpdate cameraUpdate =
               Convert.toCameraUpdate(call.argument("cameraUpdate"), density);
+          final List<?> data = Convert.toList(call.argument("cameraUpdate"));
+          if (Convert.toString(data.get(0)).equals("newLatLngBoundsWithEdgeInsets")) {
+            final List<?> padding = Convert.toList(data.get(2));
+            setPadding(
+                    Convert.toFloat(padding.get(0)),
+                    Convert.toFloat(padding.get(1)),
+                    Convert.toFloat(padding.get(2)),
+                    Convert.toFloat(padding.get(3))
+            );
+          }
           moveCamera(cameraUpdate);
           result.success(null);
           break;
@@ -298,7 +571,18 @@ final class GoogleMapController
         {
           final CameraUpdate cameraUpdate =
               Convert.toCameraUpdate(call.argument("cameraUpdate"), density);
-          animateCamera(cameraUpdate);
+          final int animationSpeed = (int) call.argument("animationSpeed");
+          final List<?> data = Convert.toList(call.argument("cameraUpdate"));
+          if (Convert.toString(data.get(0)).equals("newLatLngBoundsWithEdgeInsets")) {
+            final List<?> padding = Convert.toList(data.get(2));
+            setPadding(
+                    Convert.toFloat(padding.get(0)),
+                    Convert.toFloat(padding.get(1)),
+                    Convert.toFloat(padding.get(2)),
+                    Convert.toFloat(padding.get(3))
+            );
+          }
+          animateCamera(cameraUpdate, animationSpeed);
           result.success(null);
           break;
         }
@@ -888,8 +1172,17 @@ final class GoogleMapController
     if (mapView == null) {
       return;
     }
-    mapView.onDestroy();
-    mapView = null;
+
+    // Try to fix Fatal Exception: java.lang.NullPointerException Attempt to get length of null array.
+    // ref: https://github.com/flutter/flutter/issues/105965
+    // ref: https://github.com/flutter/flutter/issues/51064
+    // ref: https://stackoverflow.com/questions/27253524/attempt-to-get-length-of-null-array-in-google-maps-v2-android-app
+    postFrameCallback(() -> {
+      if (mapView != null) {
+        mapView.onDestroy();
+        mapView = null;
+      }
+    });
   }
 
   public void setIndoorEnabled(boolean indoorEnabled) {

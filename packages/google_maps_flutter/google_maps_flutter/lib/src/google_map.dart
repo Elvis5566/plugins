@@ -92,6 +92,7 @@ class GoogleMap extends StatefulWidget {
     Key? key,
     required this.initialCameraPosition,
     this.onMapCreated,
+    this.onMapReady,
     this.gestureRecognizers = const <Factory<OneSequenceGestureRecognizer>>{},
     this.compassEnabled = true,
     this.mapToolbarEnabled = true,
@@ -130,6 +131,8 @@ class GoogleMap extends StatefulWidget {
   ///
   /// Used to receive a [GoogleMapController] for this [GoogleMap].
   final MapCreatedCallback? onMapCreated;
+
+  final VoidCallback? onMapReady;
 
   /// The initial position of the map's camera.
   final CameraPosition initialCameraPosition;

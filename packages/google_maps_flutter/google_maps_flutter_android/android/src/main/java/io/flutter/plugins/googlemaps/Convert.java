@@ -4,9 +4,11 @@
 
 package io.flutter.plugins.googlemaps;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Point;
+import android.graphics.*;
+import android.graphics.Bitmap.Config;
+import android.graphics.PorterDuff.Mode;
+import android.os.Environment;
+import android.util.Log;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -30,6 +32,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.File;
 
 /** Conversions between JSON-like values and GoogleMaps data types. */
 class Convert {
@@ -64,6 +67,8 @@ class Convert {
         }
       case "fromBytes":
         return getBitmapFromBytes(data);
+      case "fromBitmap":
+        return BitmapDescriptorFactory.fromBitmap((Bitmap) data.get(1));
       default:
         throw new IllegalArgumentException("Cannot interpret " + o + " as BitmapDescriptor");
     }
@@ -126,6 +131,9 @@ class Convert {
         return CameraUpdateFactory.zoomOut();
       case "zoomTo":
         return CameraUpdateFactory.zoomTo(toFloat(data.get(1)));
+      case "newLatLngBoundsWithEdgeInsets":
+        return CameraUpdateFactory.newLatLngBounds(
+                toLatLngBounds(data.get(1)), 0);
       default:
         throw new IllegalArgumentException("Cannot interpret " + o + " as CameraUpdate");
     }
@@ -135,7 +143,7 @@ class Convert {
     return ((Number) o).doubleValue();
   }
 
-  private static float toFloat(Object o) {
+  static float toFloat(Object o) {
     return ((Number) o).floatValue();
   }
 
@@ -246,7 +254,7 @@ class Convert {
     return new LatLngBounds(toLatLng(data.get(0)), toLatLng(data.get(1)));
   }
 
-  private static List<?> toList(Object o) {
+  static List<?> toList(Object o) {
     return (List<?>) o;
   }
 
@@ -270,7 +278,7 @@ class Convert {
     return toFloat(o) * density;
   }
 
-  private static int toPixels(Object o, float density) {
+  static int toPixels(Object o, float density) {
     return (int) toFractionalPixels(o, density);
   }
 
@@ -289,7 +297,7 @@ class Convert {
     return new Point(toPixels(data.get(0), density), toPixels(data.get(1), density));
   }
 
-  private static String toString(Object o) {
+  static String toString(Object o) {
     return (String) o;
   }
 
@@ -402,9 +410,14 @@ class Convert {
     if (flat != null) {
       sink.setFlat(toBoolean(flat));
     }
+
     final Object icon = data.get("icon");
+
     if (icon != null) {
-      sink.setIcon(toBitmapDescriptor(icon));
+      final boolean isNullMarker = toString(toList(icon).get(0)).equals("nullMarker");
+      if (!isNullMarker) {
+        sink.setIcon(toBitmapDescriptor(icon));
+      }
     }
 
     final Object infoWindow = data.get("infoWindow");
@@ -432,6 +445,32 @@ class Convert {
       throw new IllegalArgumentException("markerId was null");
     } else {
       return markerId;
+    }
+  }
+
+  public static BClusterItem toClusterItem(Object o) {
+    final Map<?, ?> data = toMap(o);
+
+    final String markerId = (String) data.get("markerId");
+    if (markerId == null) {
+      throw new IllegalArgumentException("markerId was null");
+    } else {
+      final Map<?, ?> extra = data.containsKey("extra") ? toMap(data.get("extra")) : new HashMap<>();
+      final Object position = data.get("position");
+      final String path = (String) (extra.containsKey("path") ? extra.get("path") : "");
+      final String name = (String) (extra.containsKey("name") ? extra.get("name") : "");
+      final int status = (int) (extra.containsKey("rideStatus") ? extra.get("rideStatus") : 0);
+      final float ratio = (float) (extra.containsKey("ratio") ? ((Double) extra.get("ratio")).floatValue() : 1.0f);
+      final float zIndex = (float) (data.containsKey("zIndex") ?  ((Double) data.get("zIndex")).floatValue()  : 0.0f);
+      final Object anchor = data.get("anchor");
+      float u = 0.0f, v = 0.0f;
+      if (anchor != null) {
+        final List<?> anchorData = toList(anchor);
+        u = toFloat(anchorData.get(0));
+        v = toFloat(anchorData.get(1));
+      }
+
+      return new BClusterItem(markerId, toLatLng(position), name, path, status, ratio, u, v, zIndex);
     }
   }
 
@@ -592,7 +631,7 @@ class Convert {
     }
   }
 
-  private static List<LatLng> toPoints(Object o) {
+  static List<LatLng> toPoints(Object o) {
     final List<?> data = toList(o);
     final List<LatLng> points = new ArrayList<>(data.size());
 

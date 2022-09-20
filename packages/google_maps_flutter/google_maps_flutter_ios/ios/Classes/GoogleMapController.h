@@ -9,6 +9,8 @@
 #import "GoogleMapPolygonController.h"
 #import "GoogleMapPolylineController.h"
 
+@import GoogleMapsUtils;
+
 NS_ASSUME_NONNULL_BEGIN
 
 // Defines map overlay controllable from Flutter.
@@ -19,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
                     registrar:(NSObject<FlutterPluginRegistrar> *)registrar;
 - (void)showAtOrigin:(CGPoint)origin;
 - (void)hide;
-- (void)animateWithCameraUpdate:(GMSCameraUpdate *)cameraUpdate;
+- (void)animateWithCameraUpdate:(GMSCameraUpdate *)cameraUpdate animationSpeed:(double)animationSpeed;
 - (void)moveWithCameraUpdate:(GMSCameraUpdate *)cameraUpdate;
 - (nullable GMSCameraPosition *)cameraPosition;
 @end

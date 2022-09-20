@@ -30,6 +30,18 @@
   self.polyline.map = nil;
 }
 
+- (GMSPolyline*) polyline {
+    return _polyline;
+}
+
+- (void)setPath:(GMSPath *)path {
+    _polyline.path = path;
+}
+
+- (GMSPath *)path {
+    return _polyline.path;
+}
+
 - (void)setConsumeTapEvents:(BOOL)consumes {
   self.polyline.tappable = consumes;
 }
@@ -179,6 +191,10 @@
     [path addCoordinate:location.coordinate];
   }
   return path;
+}
+
+- (FLTGoogleMapPolylineController *)getGoogleMapPolylineController:(NSString *)polylineId {
+    return self.polylineIdentifierToController[polylineId];
 }
 
 @end

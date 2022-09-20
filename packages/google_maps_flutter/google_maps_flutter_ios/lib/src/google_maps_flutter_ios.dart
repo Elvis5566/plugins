@@ -12,6 +12,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:google_maps_flutter_platform_interface/src/method_channel/velodash_custom_impl.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import 'google_map_inspector_ios.dart';
@@ -41,7 +42,7 @@ class UnknownMapIDError extends Error {
 }
 
 /// An implementation of [GoogleMapsFlutterPlatform] for iOS.
-class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
+class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform with VelodashCustomImpl {
   /// Registers the iOS implementation of GoogleMapsFlutterPlatform.
   static void registerWith() {
     GoogleMapsFlutterPlatform.instance = GoogleMapsFlutterIOS();
@@ -50,6 +51,8 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
   // Keep a collection of id -> channel
   // Every method call passes the int mapId
   final Map<int, MethodChannel> _channels = <int, MethodChannel>{};
+
+  MethodChannel channel(int mapId) => _channel(mapId);
 
   /// Accesses the MethodChannel associated to the passed mapId.
   MethodChannel _channel(int mapId) {
@@ -95,6 +98,10 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
   // different stream views of this Controller.
   final StreamController<MapEvent<Object?>> _mapEventStreamController =
       StreamController<MapEvent<Object?>>.broadcast();
+
+
+  @override
+  StreamController<MapEvent<Object?>> get mapEventStreamController => _mapEventStreamController;
 
   // Returns a filtered view of the events in the _controller, by mapId.
   Stream<MapEvent<Object?>> _events(int mapId) =>
@@ -167,6 +174,9 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
   }
 
   Future<dynamic> _handleMethodCall(MethodCall call, int mapId) async {
+    if (velodashHandle(call, mapId)) {
+      return;
+    }
     switch (call.method) {
       case 'camera#onMoveStarted':
         _mapEventStreamController.add(CameraMoveStartedEvent(mapId));
@@ -360,10 +370,12 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
   Future<void> animateCamera(
     CameraUpdate cameraUpdate, {
     required int mapId,
+    int animationSpeed = 2000,
   }) {
     return _channel(mapId)
         .invokeMethod<void>('camera#animate', <String, Object>{
       'cameraUpdate': cameraUpdate.toJson(),
+      'animationSpeed': animationSpeed,
     });
   }
 

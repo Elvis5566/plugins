@@ -106,8 +106,11 @@
   }
   NSArray *icon = data[@"icon"];
   if (icon && icon != (id)[NSNull null]) {
-    UIImage *image = [self extractIconFromData:icon registrar:registrar];
-    [self setIcon:image];
+    bool isNullMarker = [icon.firstObject isEqualToString:@"nullMarker"];
+    if (!isNullMarker) {
+      UIImage* image = [self extractIconFromData:icon registrar:registrar];
+      [self setIcon:image];
+    }
   }
   NSNumber *flat = data[@"flat"];
   if (flat && flat != (id)[NSNull null]) {
@@ -200,6 +203,16 @@
                                                        reason:error
                                                      userInfo:nil];
       @throw exception;
+    }
+  } else if ([iconData[0] isEqualToString:@"fromUIImage"]) {
+    if (iconData.count == 2) {
+      @try {
+          image = iconData[1];
+      } @catch (NSException* exception) {
+        @throw [NSException exceptionWithName:@"InvalidFromUIImage"
+                                       reason:@"Unable to load custom UIImage"
+                                     userInfo:nil];
+      }
     }
   }
 
@@ -382,6 +395,10 @@
 + (CLLocationCoordinate2D)getPosition:(NSDictionary *)marker {
   NSArray *position = marker[@"position"];
   return [FLTGoogleMapJSONConversions locationFromLatLong:position];
+}
+
+- (BOOL)checkIfMarkerExists:(NSString *)markerId {
+    return self.markerIdentifierToController[markerId] != nil;
 }
 
 @end

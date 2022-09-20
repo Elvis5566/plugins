@@ -28,6 +28,10 @@ class PolylineController implements PolylineOptionsSink {
     polyline.remove();
   }
 
+  public Polyline getPolyline() {
+    return polyline;
+  }
+
   @Override
   public void setConsumeTapEvents(boolean consumeTapEvents) {
     this.consumeTapEvents = consumeTapEvents;

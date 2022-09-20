@@ -138,6 +138,13 @@
     return [GMSCameraUpdate zoomOut];
   } else if ([update isEqualToString:@"zoomTo"]) {
     return [GMSCameraUpdate zoomTo:[channelValue[1] floatValue]];
+  } else if ([update isEqualToString:@"newLatLngBoundsWithEdgeInsets"]) {
+    return [GMSCameraUpdate fitBounds:[FLTGoogleMapJSONConversions coordinateBoundsFromLatLongs:channelValue[1]]
+                       withEdgeInsets:UIEdgeInsetsMake(
+                       [channelValue[2][0] doubleValue],
+                       [channelValue[2][1] doubleValue],
+                       [channelValue[2][2] doubleValue],
+                       [channelValue[2][3] doubleValue])];
   }
   return nil;
 }

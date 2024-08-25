@@ -274,6 +274,9 @@ static dispatch_block_t delayNotifingAnimationCompletedTask;
         result(nil);
         return true;
     } else if ([call.method isEqualToString:@"map#initPolyline"]) {
+        NSArray *idsToRemove = @[call.arguments[@"polylineId"]];
+        [_polylinesController removePolylineWithIdentifiers:idsToRemove];
+
         id polyline = call.arguments;
         [_polylinesController addPolylines:@[polyline]];
 

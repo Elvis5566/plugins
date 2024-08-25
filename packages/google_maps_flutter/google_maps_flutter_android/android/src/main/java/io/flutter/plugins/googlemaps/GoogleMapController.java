@@ -329,6 +329,11 @@ final class GoogleMapController
       }
 
       case "map#initPolyline": {
+        String polylineId = call.argument("polylineId");
+        List<Object> idsToRemove = new ArrayList<>();
+        idsToRemove.add(polylineId);
+        polylinesController.removePolylines(idsToRemove);
+
         List<Object> polylines = new ArrayList<>();
         polylines.add(call.arguments);
         polylinesController.addPolylines(polylines);
